@@ -10,7 +10,6 @@ interface Post {
 }
 
 export default function NewPosts() {
-
     const dummyPosts: Post[] = [
         {
             did: "1",
@@ -31,8 +30,22 @@ export default function NewPosts() {
             time_us: 1625420400000,
             langs: ["fr"],
             text: "Ceci est un post d'exemple en français.",
-            location: "Paris, France"
         }
     ];
 
+    const [posts, setPosts] = useState<Post[]>(dummyPosts);
+
+    return (
+        <div className="w-full h-full overflow-y-auto">
+            {posts.map((post) => (
+                <div key={post.did} className="border-b p-4">
+                    <p className="text-sm text-gray-500">
+                        {new Date(post.time_us).toLocaleString()} - {post.location || "Unknown Location"}
+                    </p>
+                    <p className="mt-2">{post.text}</p>
+                    <p className="mt-1 text-xs text-gray-400">Languages: {post.langs.join(", ")}</p>
+                </div>
+            ))}
+        </div>
+    );
 }
