@@ -1,13 +1,14 @@
+'use client';
+
 import NewPosts from "@/components/tabs/NewPosts";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
-
+import { DisasterGlobe, generateMockData } from "@/components/globe";
 
 export default function Home() {
-
+  const mockData = generateMockData();
 
   return (
     <>
@@ -37,8 +38,15 @@ export default function Home() {
               </Card>
             </TabsContent>
             <TabsContent value="popular">
-              <Card className="w-full h-full flex items-center justify-center p-4">
-                <p className="text-2xl">Heatmap Content Area</p>
+              <Card className="w-full h-full p-0 overflow-hidden">
+                <DisasterGlobe
+                  data={mockData}
+                  timeWindowLabel="Last 24h"
+                  colorScheme="blues"
+                  autoRotate={true}
+                  rotationSpeed={0.005}
+                  onRegionClick={(regionId) => console.log('Clicked:', regionId)}
+                />
               </Card>
             </TabsContent>
             <TabsContent value="trending">
