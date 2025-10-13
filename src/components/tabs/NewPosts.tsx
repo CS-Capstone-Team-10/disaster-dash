@@ -21,15 +21,16 @@ export default function NewPosts() {
         {
             did: "2",
             time_us: 1625334000000,
-            langs: ["es"],
-            text: "Este es un post de ejemplo en español.",
-            location: "Madrid, Spain"
+            langs: ["en"],
+            text: "Another example of a post.",
+            location: "London, UK"
         },
         {
             did: "3",
             time_us: 1625420400000,
-            langs: ["fr"],
-            text: "Ceci est un post d'exemple en français.",
+            langs: ["en"],
+            text: "Yet another example of a post.",
+            location: "Paris, France"
         }
     ];
 
