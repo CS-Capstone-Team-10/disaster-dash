@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Button } from "../ui/button";
 
 interface Post {
     did: string;
@@ -7,6 +8,12 @@ interface Post {
     langs: string[];
     text: string;
     location?: string;
+}
+
+interface bskyPostResponse {
+    createdAt: string;
+    id: string;
+    tweet_data: Post;
 }
 
 export default function NewPosts() {
@@ -34,8 +41,24 @@ export default function NewPosts() {
         }
     ];
 
-    const [posts, setPosts] = useState<Post[]>(dummyPosts);
+    const [posts, setPosts] = useState<Post[]>();
 
+    async function fetchPosts() {
+        const response = await fetch('http://localhost:8000/tweets');
+        const data = await response.json();
+        const mappedPosts = data.map((item: bskyPostResponse) => item.tweet_data);
+        console.log("Mapped posts:", mappedPosts);
+        setPosts(mappedPosts);
+    }
+
+    if (!posts) {
+        return (
+            <>
+                <Button onClick={() => {fetchPosts()}} className="mb-4">Load Posts</Button>
+                <div>Loading...</div>
+            </>
+        );
+    }
     return (
         <div className="w-full h-full overflow-y-auto">
             {posts.map((post) => (
