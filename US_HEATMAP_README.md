@@ -1,10 +1,10 @@
 # US Disaster Heatmap Feature
 
-A comprehensive US-only disaster visualization feature for the BlueSky Crisis Dashboard, featuring both circular/globe and flat map views with real-time disaster monitoring capabilities.
+A comprehensive US-only disaster visualization feature for the Atlas Alert Dashboard, featuring both circular/globe and flat map views with real-time disaster monitoring capabilities.
 
 ## Overview
 
-This feature visualizes disaster-related social media posts from BlueSky, classified by disaster type (earthquake, wildfire, flood, hurricane, other) and aggregated by US city locations. It provides two visualization modes:
+This feature visualizes disaster-related social media posts from social media, classified by disaster type (earthquake, wildfire, flood, hurricane, other) and aggregated by US city locations. It provides two visualization modes:
 
 1. **Circular/Globe View**: An interactive 3D globe focused on the United States with auto-rotation
 2. **Flat Map View**: A MapLibre GL JS map using MapTiler Planet Lite tiles with heatmap and circle layers
@@ -374,4 +374,4 @@ For issues or questions:
 
 ---
 
-Built for the **BlueSky Crisis Dashboard** capstone project.
+Built for the **Atlas Alert Dashboard** capstone project.

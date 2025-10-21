@@ -95,7 +95,8 @@ export default function UsStateChoropleth({
 
     if (onStateClick) {
       series.mapPolygons.template.events.on("click", (ev) => {
-        const id = ev.target.dataItem?.get("id");
+        const dataContext = ev.target.dataItem?.dataContext as { id?: string };
+        const id = dataContext?.id;
         if (id) onStateClick(id);
       });
     }
@@ -114,6 +115,8 @@ export default function UsStateChoropleth({
       orientation: "vertical",
       startColor: am5.color(startColor),
       endColor: am5.color(endColor),
+      startOpacity: 1,
+      endOpacity: 1,
       startText: "Low",
       endText: "High",
       stepCount: 5,
@@ -137,19 +140,19 @@ export default function UsStateChoropleth({
     });
 
     series.mapPolygons.template.events.on("pointerover", (ev) => {
-      const v = ev.target.dataItem?.get("value");
+      const dataContext = ev.target.dataItem?.dataContext as { value?: number };
+      const v = dataContext?.value;
       if (v != null) legend.showValue(v);
     });
 
     // title / subtitle (optional)
-    const label = root.container.children.push(
+    root.container.children.push(
       am5.Label.new(root, {
         x: 0, y: 0,
         text: `US Disaster Heatmap — ${disaster.toUpperCase()}${timeWindowLabel ? ` · ${timeWindowLabel}` : ''}`,
         fontSize: 14, fill: am5.color(0x444444), paddingLeft: 12, paddingTop: 8
       })
     );
-    label.setAll({ clickable: false });
 
     // initial data
     series.data.setAll(seriesData);

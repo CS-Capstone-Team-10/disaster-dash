@@ -24,12 +24,12 @@ export default function LiveFeed() {
   }, []);
 
   return (
-    <div className="rounded-2xl border border-gray-800/40 bg-gray-900/50 p-4 h-full overflow-auto">
-      <div className="flex items-center justify-between mb-3">
+    <div className="rounded-2xl border border-gray-800/40 bg-gray-900/50 p-4 flex flex-col" style={{ maxHeight: '1000px' }}>
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <h3 className="font-semibold">Live Feed</h3>
         <span className="text-xs text-gray-400">{items.length} items</span>
       </div>
-      <ul className="space-y-3">
+      <ul className="space-y-3 overflow-y-auto flex-1 pr-2">
         {items.map(t => (
           <li key={t.id} className="p-3 rounded-xl border border-gray-800/50 bg-gray-950/50">
             <div className="flex items-center justify-between">

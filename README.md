@@ -1,4 +1,8 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Atlas Alert
+
+A real-time disaster intelligence dashboard that monitors and visualizes disaster events across the United States through social media analysis and interactive mapping.
+
+This is a [Next.js](https://nextjs.org) project built with TypeScript, Tailwind CSS, and modern data visualization libraries.
 
 ## Getting Started
 
