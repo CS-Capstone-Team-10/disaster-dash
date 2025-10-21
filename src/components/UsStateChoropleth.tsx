@@ -180,14 +180,20 @@ export default function UsStateChoropleth({
     }]);
 
     // update legend colors
-    legend.setAll({
-      startColor: am5.color(startColor),
-      endColor: am5.color(endColor)
-    });
+    if (legend) {
+      legend.setAll({
+        startColor: am5.color(startColor),
+        endColor: am5.color(endColor)
+      });
 
-    // update label colors
-    legend.startLabel.set("fill", am5.color(startColor));
-    legend.endLabel.set("fill", am5.color(endColor));
+      // update label colors (check if labels exist)
+      if (legend.startLabel) {
+        legend.startLabel.set("fill", am5.color(startColor));
+      }
+      if (legend.endLabel) {
+        legend.endLabel.set("fill", am5.color(endColor));
+      }
+    }
 
     // refresh data
     series.data.setAll(seriesData);
