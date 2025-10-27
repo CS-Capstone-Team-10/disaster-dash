@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Map, AlertCircle, TrendingUp, Settings, Bell, X, User, LogIn, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -10,21 +13,21 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const [activeItem, setActiveItem] = useState('dashboard');
+  const pathname = usePathname();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { id: 'map', label: 'Live Map', icon: <Map className="w-5 h-5" /> },
-    { id: 'alerts', label: 'Alerts', icon: <AlertCircle className="w-5 h-5" /> },
-    { id: 'analytics', label: 'Analytics', icon: <TrendingUp className="w-5 h-5" /> },
-    { id: 'notifications', label: 'Notifications', icon: <Bell className="w-5 h-5" /> },
-    { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
+    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
+    { id: 'map', label: 'Live Map', icon: <Map className="w-5 h-5" />, href: '/live-map' },
+    { id: 'alerts', label: 'Alerts', icon: <AlertCircle className="w-5 h-5" />, href: '/alerts' },
+    { id: 'analytics', label: 'Analytics', icon: <TrendingUp className="w-5 h-5" />, href: '/analytics' },
+    { id: 'notifications', label: 'Notifications', icon: <Bell className="w-5 h-5" />, href: '/notifications' },
+    { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" />, href: '/settings' },
   ];
 
   const accountItems = [
-    { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" /> },
-    { id: 'signin', label: 'Sign In', icon: <LogIn className="w-5 h-5" /> },
-    { id: 'signup', label: 'Sign Up', icon: <UserPlus className="w-5 h-5" /> },
+    { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" />, href: '/profile' },
+    { id: 'signin', label: 'Sign In', icon: <LogIn className="w-5 h-5" />, href: '/sign-in' },
+    { id: 'signup', label: 'Sign Up', icon: <UserPlus className="w-5 h-5" />, href: '/sign-up' },
   ];
 
   return (
@@ -52,8 +55,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-6 border-b border-gray-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
-                <AlertCircle className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg overflow-hidden">
+                <Image
+                  src="/logo.png"
+                  alt="Atlas Alert Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </div>
               <div>
                 <h1 className="text-lg font-bold text-white">Atlas Alert</h1>
@@ -71,26 +80,30 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         <nav className="flex-1 p-4 overflow-y-auto">
           <ul className="space-y-2">
-            {menuItems.map((item, index) => (
-              <motion.li
-                key={item.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <button
-                  onClick={() => setActiveItem(item.id)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-200 ${
-                    activeItem === item.id
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                  }`}
+            {menuItems.map((item, index) => {
+              const isActive = pathname === item.href;
+              return (
+                <motion.li
+                  key={item.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
-                  {item.icon}
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              </motion.li>
-            ))}
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-200 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm'
+                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                </motion.li>
+              );
+            })}
           </ul>
 
           <div className="mt-6 mb-3 px-4">
@@ -100,26 +113,30 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
 
           <ul className="space-y-2">
-            {accountItems.map((item, index) => (
-              <motion.li
-                key={item.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: (menuItems.length + index) * 0.05 }}
-              >
-                <button
-                  onClick={() => setActiveItem(item.id)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-200 ${
-                    activeItem === item.id
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                  }`}
+            {accountItems.map((item, index) => {
+              const isActive = pathname === item.href;
+              return (
+                <motion.li
+                  key={item.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: (menuItems.length + index) * 0.05 }}
                 >
-                  {item.icon}
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              </motion.li>
-            ))}
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-200 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm'
+                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                </motion.li>
+              );
+            })}
           </ul>
         </nav>
 

@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from "react";
 import { ClassifiedTweet } from "@/types/incidents";
-import { initialTweets, subscribeToTweetStream, startMockTweetPump } from "@/data/mock";
+import { MOCK_CLASSIFIED_TWEETS, subscribeToTweetStream, startMockTweetPump } from "@/lib/mock";
 
 const colorByType: Record<string,string> = {
   earthquake: "bg-amber-500/20 text-amber-300 border-amber-500/30",
@@ -12,7 +12,7 @@ const colorByType: Record<string,string> = {
 };
 
 export default function LiveFeed() {
-  const [items, setItems] = useState<ClassifiedTweet[]>(initialTweets);
+  const [items, setItems] = useState<ClassifiedTweet[]>(MOCK_CLASSIFIED_TWEETS);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

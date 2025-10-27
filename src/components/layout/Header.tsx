@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Bell, User, Menu, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -24,8 +25,14 @@ export function Header({ onMenuClick }: HeaderProps) {
           >
             <Menu className="w-4 h-4" />
           </button>
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-sm">AA</span>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
+            <Image
+              src="/logo.png"
+              alt="Atlas Alert Logo"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
           </div>
         </div>
 
