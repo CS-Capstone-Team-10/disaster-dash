@@ -5,13 +5,11 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function Home() {
-
-
   return (
     <>
       <div className="flex-col h-screen">
         <div className="h-1/12 items-center p-4">
-          <h1 className="text-4xl font-bold text-center">Dashboard Title</h1>
+          <h1 className="text-4xl font-bold text-center">Disaster Dashboard</h1>
         </div>
         <div className="flex h-11/12 w-screen gap-4 p-4">
           <Card className="flex flex-col items-center max-w-md p-4 justify-between">
