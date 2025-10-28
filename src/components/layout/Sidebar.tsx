@@ -10,9 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onSettingsClick: () => void;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, onSettingsClick }: SidebarProps) {
   const pathname = usePathname();
 
   const menuItems = [
@@ -21,8 +22,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { id: 'alerts', label: 'Alerts', icon: <AlertCircle className="w-5 h-5" />, href: '/alerts' },
     { id: 'analytics', label: 'Analytics', icon: <TrendingUp className="w-5 h-5" />, href: '/analytics' },
     { id: 'notifications', label: 'Notifications', icon: <Bell className="w-5 h-5" />, href: '/notifications' },
-    { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" />, href: '/settings' },
   ];
+
+  const settingsItem = { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> };
 
   const accountItems = [
     { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" />, href: '/profile' },
@@ -31,20 +33,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   ];
 
   return (
-    <>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-md z-40"
-            onClick={onClose}
-          />
-        )}
-      </AnimatePresence>
-
       <motion.aside
         initial={{ x: -300, opacity: 0 }}
         animate={{ x: isOpen ? 0 : -300, opacity: isOpen ? 1 : 0 }}
@@ -106,6 +94,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             })}
           </ul>
 
+          {/* Settings Button */}
+          <div className="mt-4">
+            <motion.button
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: menuItems.length * 0.05 }}
+              onClick={onSettingsClick}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-200 text-gray-400 hover:bg-gray-800 hover:text-white"
+            >
+              {settingsItem.icon}
+              <span className="font-medium">{settingsItem.label}</span>
+            </motion.button>
+          </div>
+
           <div className="mt-6 mb-3 px-4">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
               Account Pages
@@ -150,6 +152,5 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
         </div>
       </motion.aside>
-    </>
   );
 }

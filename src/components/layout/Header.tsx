@@ -7,9 +7,10 @@ import { motion } from 'framer-motion';
 
 interface HeaderProps {
   onMenuClick: () => void;
+  onSettingsClick: () => void;
 }
 
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick, onSettingsClick }: HeaderProps) {
   return (
     <motion.header
       initial={{ y: -60 }}
@@ -40,7 +41,10 @@ export function Header({ onMenuClick }: HeaderProps) {
           <button className="p-2 text-gray-400 hover:bg-gray-800 rounded-xl transition-all hover:scale-105 relative">
             <User className="w-4 h-4" />
           </button>
-          <button className="p-2 text-gray-400 hover:bg-gray-800 rounded-xl transition-all hover:scale-105">
+          <button
+            onClick={onSettingsClick}
+            className="p-2 text-gray-400 hover:bg-gray-800 rounded-xl transition-all hover:scale-105"
+          >
             <Settings className="w-4 h-4" />
           </button>
           <button className="relative p-2 text-gray-400 hover:bg-gray-800 rounded-xl transition-all hover:scale-105">

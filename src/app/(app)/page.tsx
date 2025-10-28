@@ -2,17 +2,35 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { KPIHeader } from '@/components/kpi/KPIHeader';
+import { StatsCard } from '@/components/dashboard/StatsCard';
 import LiveFeed from '@/components/dashboard/LiveFeed';
 import { TrendChart } from '@/components/dashboard/TrendChart';
 import UsStateChoropleth from '@/components/UsStateChoropleth';
-import { MOCK_STATE_DATA, MOCK_KPI_DATA, MOCK_DISASTER_TRENDS, MOCK_METRICS } from '@/lib/mock';
+import { MOCK_STATE_DATA, MOCK_DISASTER_TRENDS, MOCK_METRICS } from '@/lib/mock';
+import { MOCK_TWEETS } from '@/lib/mock/tweets';
 import type { Disaster } from '@/types/disaster';
+import { AlertTriangle, Users, MapPin, TrendingUp } from 'lucide-react';
 
 export default function DashboardPage() {
   const [disaster, setDisaster] = useState<Disaster>('all');
   const m = useMemo(() => MOCK_METRICS, []);
   const stateAgg = useMemo(() => MOCK_STATE_DATA, []);
+
+  // Calculate stats from MOCK_TWEETS
+  const stats = useMemo(() => {
+    const activeDisasters = new Set(MOCK_TWEETS.map(t => `${t.type}-${t.state}`)).size;
+    const postsAnalyzed = MOCK_TWEETS.length;
+    const affectedAreas = new Set(MOCK_TWEETS.map(t => `${t.city}, ${t.state}`)).size;
+    const highConfidenceCount = MOCK_TWEETS.filter(t => t.confidence >= 0.8).length;
+    const alertLevel = highConfidenceCount / postsAnalyzed > 0.3 ? 'High' : 'Medium';
+
+    return {
+      activeDisasters,
+      postsAnalyzed,
+      affectedAreas,
+      alertLevel,
+    };
+  }, []);
 
   return (
     <motion.div
@@ -22,11 +40,41 @@ export default function DashboardPage() {
     >
       <h1 className="text-2xl font-bold text-gray-100 mb-6">Overview</h1>
 
-      {/* KPI Header with production cards */}
-      <KPIHeader
-        data={MOCK_KPI_DATA}
-        onRangeChange={(range) => console.log('Range changed:', range)}
-      />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <StatsCard
+          title="Active Disasters"
+          value={stats.activeDisasters.toString()}
+          change="+12%"
+          changeType="increase"
+          icon={<AlertTriangle className="w-5 h-5" />}
+          delay={0.1}
+        />
+        <StatsCard
+          title="Posts Analyzed"
+          value={stats.postsAnalyzed.toLocaleString()}
+          change="+8.3%"
+          changeType="increase"
+          icon={<Users className="w-5 h-5" />}
+          delay={0.2}
+        />
+        <StatsCard
+          title="Affected Areas"
+          value={stats.affectedAreas.toString()}
+          change="-5.2%"
+          changeType="decrease"
+          icon={<MapPin className="w-5 h-5" />}
+          delay={0.3}
+        />
+        <StatsCard
+          title="Alert Level"
+          value={stats.alertLevel}
+          change="+15%"
+          changeType="increase"
+          icon={<TrendingUp className="w-5 h-5" />}
+          delay={0.4}
+        />
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

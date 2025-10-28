@@ -350,6 +350,11 @@ export const MOCK_NOTIFICATION_HISTORY = [
 // MOCK TWEET STREAM (for live updates)
 // ============================================================================
 
+// Simple UUID generator that works in all environments
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
 type Listener = (tweet: ClassifiedTweet) => void;
 const listeners = new Set<Listener>();
 
@@ -378,7 +383,7 @@ export function startMockTweetPump() {
     const d = disasters[Math.floor(Math.random() * disasters.length)];
     const place = cities[Math.floor(Math.random() * cities.length)];
     const tweet: ClassifiedTweet = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       timestamp: new Date().toISOString(),
       handle: users[Math.floor(Math.random() * users.length)],
       text:
