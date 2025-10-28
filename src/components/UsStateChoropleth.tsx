@@ -171,7 +171,6 @@ export default function UsStateChoropleth({
     if (!root) return;
     const chart = root.container.children.getIndex(0) as am5map.MapChart;
     const series = chart.series.getIndex(0) as am5map.MapPolygonSeries;
-    const legend = chart.children.getIndex(1) as am5.HeatLegend;
 
     // update palette
     series.set("heatRules", [{
@@ -182,21 +181,47 @@ export default function UsStateChoropleth({
       key: "fill"
     }]);
 
-    // update legend colors
-    if (legend) {
-      legend.setAll({
-        startColor: am5.color(startColor),
-        endColor: am5.color(endColor)
-      });
-
-      // update label colors (check if labels exist)
-      if (legend.startLabel) {
-        legend.startLabel.set("fill", am5.color(startColor));
-      }
-      if (legend.endLabel) {
-        legend.endLabel.set("fill", am5.color(endColor));
-      }
+    // Remove old legend and create a new one with the new colors
+    const oldLegend = chart.children.getIndex(1) as am5.HeatLegend;
+    if (oldLegend) {
+      chart.children.removeValue(oldLegend);
+      oldLegend.dispose();
     }
+
+    // Create new legend with updated colors
+    const legend = chart.children.push(am5.HeatLegend.new(root, {
+      orientation: "vertical",
+      startColor: am5.color(startColor),
+      endColor: am5.color(endColor),
+      startOpacity: 1,
+      endOpacity: 1,
+      startText: "Low",
+      endText: "High",
+      stepCount: 5,
+      paddingLeft: 12,
+      paddingTop: 12
+    }));
+
+    // Color the legend labels to match the gradient
+    legend.startLabel.setAll({
+      fill: am5.color(startColor),
+      fontWeight: "600"
+    });
+    legend.endLabel.setAll({
+      fill: am5.color(endColor),
+      fontWeight: "600"
+    });
+
+    series.events.once("datavalidated", () => {
+      legend.set("startValue", series.getPrivate("valueLow"));
+      legend.set("endValue", series.getPrivate("valueHigh"));
+    });
+
+    series.mapPolygons.template.events.on("pointerover", (ev) => {
+      const dataContext = ev.target.dataItem?.dataContext as { value?: number };
+      const v = dataContext?.value;
+      if (v != null) legend.showValue(v);
+    });
 
     // refresh data
     series.data.setAll(seriesData);
