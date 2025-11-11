@@ -18,7 +18,7 @@ export default function NotificationsPage() {
   const [frequency, setFrequency] = useState('realtime');
 
   // Centralized data fetching - replace with API call later
-  const { data: MOCK_NOTIFICATION_HISTORY, loading } = useNotificationHistory();
+  const { data: MOCK_NOTIFICATION_HISTORY } = useNotificationHistory();
 
   return (
     <motion.div

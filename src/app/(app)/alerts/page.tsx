@@ -39,7 +39,7 @@ export default function AlertsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Centralized data fetching - replace with API call later
-  const { data: MOCK_TWEETS, loading } = useDisasterIncidents();
+  const { data: MOCK_TWEETS } = useDisasterIncidents();
 
   const filteredTweets = useMemo(() => {
     return MOCK_TWEETS.filter((tweet) => {
@@ -69,12 +69,12 @@ export default function AlertsPage() {
 
       return true;
     });
-  }, [searchQuery, disasterFilter, stateFilter, statusFilter]);
+  }, [MOCK_TWEETS, searchQuery, disasterFilter, stateFilter, statusFilter]);
 
   // Get unique states for filter
   const uniqueStates = useMemo(() => {
     return Array.from(new Set(MOCK_TWEETS.map((t) => t.state))).sort();
-  }, []);
+  }, [MOCK_TWEETS]);
 
   return (
     <motion.div

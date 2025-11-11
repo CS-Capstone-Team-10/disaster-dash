@@ -33,7 +33,7 @@ export default function NewPosts() {
         }
     ];
 
-    const [posts, setPosts] = useState<Post[]>(dummyPosts);
+    const [posts] = useState<Post[]>(dummyPosts);
 
     return (
         <div className="w-full h-full overflow-y-auto">

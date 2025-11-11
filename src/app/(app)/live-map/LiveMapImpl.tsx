@@ -5,7 +5,7 @@ import React, { useMemo, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Marker, useMap } from "react-leaflet";
 import L, { DivIcon } from "leaflet";
 import { useDisasterIncidents } from '@/lib/services/data-service';
-import type { Tweet } from "@/lib/mock/tweets";
+import type { MockTweet } from "@/lib/mock";
 import { aggregateTweetsToCityCounts, tweetsForCity } from "@/lib/geo/aggregate";
 
 // Fit bounds helper
@@ -90,7 +90,7 @@ function CenterModal({
   );
 }
 
-function TweetRow({ t }: { t: Tweet }) {
+function TweetRow({ t }: { t: MockTweet }) {
   const badge = {
     earthquake: "bg-orange-500/20 text-orange-300 border border-orange-500/30",
     wildfire: "bg-red-500/20 text-red-300 border border-red-500/30",
@@ -125,7 +125,7 @@ function TweetRow({ t }: { t: Tweet }) {
 
 export default function LiveMapImpl() {
   // Centralized data fetching - replace with API call later
-  const { data: tweets, loading } = useDisasterIncidents();
+  const { data: tweets } = useDisasterIncidents();
   const points = useMemo(() => aggregateTweetsToCityCounts(tweets), [tweets]);
 
   const [openCity, setOpenCity] = useState<{ city: string; state: string } | null>(null);

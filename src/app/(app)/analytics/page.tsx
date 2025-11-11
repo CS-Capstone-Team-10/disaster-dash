@@ -29,7 +29,7 @@ export default function AnalyticsPage() {
   const [mounted, setMounted] = useState(false);
 
   // Centralized data fetching - replace with API call later
-  const { data: MOCK_TWEETS, loading } = useDisasterIncidents();
+  const { data: MOCK_TWEETS } = useDisasterIncidents();
 
   // Prevent hydration mismatch by only calculating after client mount
   React.useEffect(() => {
@@ -44,13 +44,13 @@ export default function AnalyticsPage() {
         type: disasterType,
         minConf: minConfidence,
       }) : [],
-    [mounted, window, disasterType, minConfidence]
+    [MOCK_TWEETS, mounted, window, disasterType, minConfidence]
   );
 
   // Split current vs previous for KPI deltas
   const { current, previous } = useMemo(
     () => mounted ? splitCurrentVsPrev(MOCK_TWEETS, window) : { current: [], previous: [] },
-    [mounted, window]
+    [MOCK_TWEETS, mounted, window]
   );
 
   // Apply same filters to current and previous

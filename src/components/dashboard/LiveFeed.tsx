@@ -1,6 +1,5 @@
 'use client';
 import React, { useState } from "react";
-import { ClassifiedTweet } from "@/types/incidents";
 import { useLiveTweetStream } from '@/lib/services/data-service';
 
 const colorByType: Record<string,string> = {

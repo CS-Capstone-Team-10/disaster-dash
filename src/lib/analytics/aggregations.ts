@@ -1,12 +1,12 @@
-import type { Tweet } from "@/lib/mock/tweets";
+import type { MockTweet } from "@/lib/mock";
 
 export type WindowKey = "1h" | "24h" | "7d";
-export type Disaster = Tweet["type"];
+export type Disaster = MockTweet["type"];
 
 export function filterTweets(
-  tweets: Tweet[],
+  tweets: MockTweet[],
   opts: { window: WindowKey; type: Disaster | "all"; minConf: number }
-): Tweet[] {
+): MockTweet[] {
   const now = Date.now();
   const ms = opts.window === "1h" ? 3600e3 : opts.window === "24h" ? 86400e3 : 7 * 86400e3;
   return tweets.filter(t =>
@@ -17,9 +17,9 @@ export function filterTweets(
 }
 
 export function splitCurrentVsPrev(
-  tweets: Tweet[],
+  tweets: MockTweet[],
   windowKey: WindowKey
-): { current: Tweet[]; previous: Tweet[] } {
+): { current: MockTweet[]; previous: MockTweet[] } {
   const now = Date.now();
   const ms = windowKey === "1h" ? 3600e3 : windowKey === "24h" ? 86400e3 : 7 * 86400e3;
   const curStart = now - ms;
@@ -46,7 +46,7 @@ export function bucketTimestamp(ts: string, windowKey: WindowKey): string {
 }
 
 export function seriesIncidentsOverTimeByType(
-  tweets: Tweet[],
+  tweets: MockTweet[],
   windowKey: WindowKey
 ) {
   // Return Nivo Stream format: [{ x: ISO, earthquake: n, wildfire: n, ... }, ...]
@@ -61,7 +61,7 @@ export function seriesIncidentsOverTimeByType(
     .map(([x, vals]) => ({ x, ...vals }));
 }
 
-export function topCities(tweets: Tweet[], max = 10) {
+export function topCities(tweets: MockTweet[], max = 10) {
   const map = new Map<string, number>();
   for (const t of tweets) {
     if (!t.city || !t.state) continue;
@@ -74,7 +74,7 @@ export function topCities(tweets: Tweet[], max = 10) {
     .slice(0, max);
 }
 
-export function confidenceHistogram(tweets: Tweet[], bins = 20) {
+export function confidenceHistogram(tweets: MockTweet[], bins = 20) {
   const arr = new Array(bins).fill(0);
   for (const t of tweets) {
     let idx = Math.floor(t.confidence * bins);
@@ -88,7 +88,7 @@ export function confidenceHistogram(tweets: Tweet[], bins = 20) {
   }));
 }
 
-export function statusByType(tweets: Tweet[]) {
+export function statusByType(tweets: MockTweet[]) {
   // For stacked bars: [{ type:"earthquake", new:n, triaged:n, dismissed:n }, ...]
   const types: Disaster[] = ["earthquake", "wildfire", "flood", "hurricane", "other"];
   const by: Record<Disaster, { new: number; triaged: number; dismissed: number }> = Object.fromEntries(
@@ -102,7 +102,7 @@ export function statusByType(tweets: Tweet[]) {
 }
 
 // Generate sparkline data for KPI cards
-export function sparklineData(tweets: Tweet[], windowKey: WindowKey, points = 12) {
+export function sparklineData(tweets: MockTweet[], windowKey: WindowKey, points = 12) {
   const byBucket: Record<string, number> = {};
   for (const t of tweets) {
     const x = bucketTimestamp(t.createdAt, windowKey);

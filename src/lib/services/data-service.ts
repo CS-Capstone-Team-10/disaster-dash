@@ -74,19 +74,36 @@ async function fetchStateAggregations(): Promise<StateDisasterDatum[]> {
   return [];
 }
 
+// Types for trend and notification data
+export type TrendData = {
+  date: string;
+  wildfires: number;
+  floods: number;
+  hurricanes: number;
+  earthquakes: number;
+};
+
+export type NotificationHistory = {
+  id: string;
+  sentAt: string;
+  channel: string;
+  summary: string;
+  status: string;
+};
+
 /**
  * Fetch disaster trend data for charts
  * TODO: Replace with actual API call
  */
-async function fetchDisasterTrends(timeRange?: string): Promise<any[]> {
+async function fetchDisasterTrends(_timeRange?: string): Promise<TrendData[]> {
   if (USE_MOCK_DATA) {
     await new Promise(resolve => setTimeout(resolve, 100));
     return MOCK_DISASTER_TRENDS;
   }
 
   // READY FOR API: Uncomment and modify when your API is ready
-  // const url = timeRange
-  //   ? `${API_BASE_URL}/trends?range=${timeRange}`
+  // const url = _timeRange
+  //   ? `${API_BASE_URL}/trends?range=${_timeRange}`
   //   : `${API_BASE_URL}/trends`;
   // const response = await fetch(url);
   // if (!response.ok) throw new Error('Failed to fetch trends');
@@ -117,7 +134,7 @@ async function fetchMetrics(): Promise<MetricsSnapshot> {
  * Fetch notification history
  * TODO: Replace with actual API call
  */
-async function fetchNotificationHistory(): Promise<any[]> {
+async function fetchNotificationHistory(): Promise<NotificationHistory[]> {
   if (USE_MOCK_DATA) {
     await new Promise(resolve => setTimeout(resolve, 100));
     return MOCK_NOTIFICATION_HISTORY;
@@ -178,7 +195,7 @@ export function useStateAggregations() {
  * Use this in: Dashboard (Trend Chart)
  */
 export function useDisasterTrends(timeRange?: string) {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<TrendData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -217,7 +234,7 @@ export function useMetrics() {
  * Use this in: Notifications page
  */
 export function useNotificationHistory() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<NotificationHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -316,7 +333,8 @@ export function useFilteredIncidents(filters: {
 
     // Apply confidence filter
     if (filters.minConfidence !== undefined) {
-      result = result.filter(t => t.confidence >= filters.minConfidence);
+      const minConf = filters.minConfidence;
+      result = result.filter(t => t.confidence >= minConf);
     }
 
     // TODO: Apply time window filter when you have real timestamps

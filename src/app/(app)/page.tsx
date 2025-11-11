@@ -15,7 +15,7 @@ export default function DashboardPage() {
   const [disaster, setDisaster] = useState<Disaster>('all');
 
   // Centralized data fetching - replace with API call later
-  const { incidents, stateAggregations, trends, metrics, loading } = useDashboardData();
+  const { incidents, stateAggregations, trends, metrics } = useDashboardData();
 
   // Calculate stats from incidents
   const stats = useMemo(() => {

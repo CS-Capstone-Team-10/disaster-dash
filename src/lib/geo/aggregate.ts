@@ -1,10 +1,10 @@
 // src/lib/geo/aggregate.ts
 import { CITY_COORDS } from "./cities";
-import type { Tweet } from "@/lib/mock/tweets";
+import type { MockTweet } from "@/lib/mock";
 
 export type CityPoint = { city: string; state: string; lat: number; lon: number; count: number };
 
-export function aggregateTweetsToCityCounts(tweets: Tweet[]): CityPoint[] {
+export function aggregateTweetsToCityCounts(tweets: MockTweet[]): CityPoint[] {
   const counts = new Map<string, { city: string; state: string; count: number }>();
 
   for (const t of tweets) {
@@ -24,9 +24,9 @@ export function aggregateTweetsToCityCounts(tweets: Tweet[]): CityPoint[] {
   return out.sort((a, b) => b.count - a.count);
 }
 
-export function tweetsForCity(tweets: Tweet[], city: string, state: string): Tweet[] {
+export function tweetsForCity(tweets: MockTweet[], city: string, state: string): MockTweet[] {
   const key = `${city.trim().toLowerCase()},${state.trim().toLowerCase()}`;
   return tweets.filter(
-    t => `${t.city.trim().toLowerCase()},${t.state.trim().toLowerCase()}` === key
+    t => t.city && `${t.city.trim().toLowerCase()},${t.state.trim().toLowerCase()}` === key
   );
 }
