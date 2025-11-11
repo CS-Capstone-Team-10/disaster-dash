@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MOCK_TWEETS } from "@/lib/mock/tweets";
+import { useDisasterIncidents } from "@/lib/services/data-service";
 import {
   filterTweets,
   splitCurrentVsPrev,
@@ -20,27 +20,37 @@ import { IncidentsStream } from "@/components/analytics/IncidentsStream";
 import { TopCitiesBar } from "@/components/analytics/TopCitiesBar";
 import { ConfidenceHistogram } from "@/components/analytics/ConfidenceHistogram";
 import { StatusStackedByType } from "@/components/analytics/StatusStackedByType";
+import { DropdownMenu } from "@/components/ui/dropdown-menu";
 
 export default function AnalyticsPage() {
   const [window, setWindow] = useState<WindowKey>("24h");
   const [disasterType, setDisasterType] = useState<Disaster | "all">("all");
   const [minConfidence, setMinConfidence] = useState(0.5);
+  const [mounted, setMounted] = useState(false);
+
+  // Centralized data fetching - replace with API call later
+  const { data: MOCK_TWEETS, loading } = useDisasterIncidents();
+
+  // Prevent hydration mismatch by only calculating after client mount
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Filter tweets based on current selections
   const filtered = useMemo(
     () =>
-      filterTweets(MOCK_TWEETS, {
+      mounted ? filterTweets(MOCK_TWEETS, {
         window,
         type: disasterType,
         minConf: minConfidence,
-      }),
-    [window, disasterType, minConfidence]
+      }) : [],
+    [mounted, window, disasterType, minConfidence]
   );
 
   // Split current vs previous for KPI deltas
   const { current, previous } = useMemo(
-    () => splitCurrentVsPrev(MOCK_TWEETS, window),
-    [window]
+    () => mounted ? splitCurrentVsPrev(MOCK_TWEETS, window) : { current: [], previous: [] },
+    [mounted, window]
   );
 
   // Apply same filters to current and previous
@@ -89,11 +99,11 @@ export default function AnalyticsPage() {
     Object.entries(typeCounts).sort(([, a], [, b]) => b - a)[0]?.[0] || "N/A";
 
   // Chart data
-  const streamData = useMemo(() => seriesIncidentsOverTimeByType(filtered, window), [filtered, window]);
-  const topCitiesData = useMemo(() => topCities(filtered, 10), [filtered]);
-  const histogramData = useMemo(() => confidenceHistogram(filtered, 20), [filtered]);
-  const statusData = useMemo(() => statusByType(filtered), [filtered]);
-  const sparkData = useMemo(() => sparklineData(currentFiltered, window, 12), [currentFiltered, window]);
+  const streamData = useMemo(() => mounted ? seriesIncidentsOverTimeByType(filtered, window) : [], [mounted, filtered, window]);
+  const topCitiesData = useMemo(() => mounted ? topCities(filtered, 10) : [], [mounted, filtered]);
+  const histogramData = useMemo(() => mounted ? confidenceHistogram(filtered, 20) : [], [mounted, filtered]);
+  const statusData = useMemo(() => mounted ? statusByType(filtered) : [], [mounted, filtered]);
+  const sparkData = useMemo(() => mounted ? sparklineData(currentFiltered, window, 12) : [], [mounted, currentFiltered, window]);
 
   return (
     <motion.div
@@ -114,35 +124,31 @@ export default function AnalyticsPage() {
       <div className="bg-gray-900/50 border border-gray-800/40 rounded-xl p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Time Window */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">Time Window</label>
-            <select
-              value={window}
-              onChange={(e) => setWindow(e.target.value as WindowKey)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
-            >
-              <option value="1h">Last Hour</option>
-              <option value="24h">Last 24 Hours</option>
-              <option value="7d">Last 7 Days</option>
-            </select>
-          </div>
+          <DropdownMenu
+            label="Time Window"
+            value={window}
+            onChange={(value) => setWindow(value as WindowKey)}
+            options={[
+              { value: "1h", label: "Last Hour" },
+              { value: "24h", label: "Last 24 Hours" },
+              { value: "7d", label: "Last 7 Days" }
+            ]}
+          />
 
           {/* Disaster Type */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">Disaster Type</label>
-            <select
-              value={disasterType}
-              onChange={(e) => setDisasterType(e.target.value as Disaster | "all")}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
-            >
-              <option value="all">All Types</option>
-              <option value="earthquake">Earthquake</option>
-              <option value="wildfire">Wildfire</option>
-              <option value="flood">Flood</option>
-              <option value="hurricane">Hurricane</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
+          <DropdownMenu
+            label="Disaster Type"
+            value={disasterType}
+            onChange={(value) => setDisasterType(value as Disaster | "all")}
+            options={[
+              { value: "all", label: "All Types" },
+              { value: "earthquake", label: "Earthquake" },
+              { value: "wildfire", label: "Wildfire" },
+              { value: "flood", label: "Flood" },
+              { value: "hurricane", label: "Hurricane" },
+              { value: "other", label: "Other" }
+            ]}
+          />
 
           {/* Confidence Threshold */}
           <div>

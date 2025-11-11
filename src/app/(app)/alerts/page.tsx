@@ -4,10 +4,11 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { MOCK_TWEETS } from '@/lib/mock';
+import { useDisasterIncidents } from '@/lib/services/data-service';
 import type { MockTweet } from '@/lib/mock';
 import { formatDistanceToNow } from 'date-fns';
 import { Search, MoreVertical, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { DropdownMenu, CustomDropdownMenu } from '@/components/ui/dropdown-menu';
 
 const DISASTER_COLORS = {
   earthquake: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
@@ -36,6 +37,9 @@ export default function AlertsPage() {
   const [disasterFilter, setDisasterFilter] = useState<string>('all');
   const [stateFilter, setStateFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Centralized data fetching - replace with API call later
+  const { data: MOCK_TWEETS, loading } = useDisasterIncidents();
 
   const filteredTweets = useMemo(() => {
     return MOCK_TWEETS.filter((tweet) => {
@@ -103,44 +107,46 @@ export default function AlertsPage() {
           </div>
 
           {/* Disaster Type Filter */}
-          <select
+          <DropdownMenu
             value={disasterFilter}
-            onChange={(e) => setDisasterFilter(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm bg-gray-800 border-gray-700 text-gray-200 focus:border-blue-500 focus:outline-none"
-          >
-            <option value="all">All Types</option>
-            <option value="earthquake">Earthquake</option>
-            <option value="wildfire">Wildfire</option>
-            <option value="flood">Flood</option>
-            <option value="hurricane">Hurricane</option>
-            <option value="other">Other</option>
-          </select>
+            onChange={setDisasterFilter}
+            placeholder="All Types"
+            options={[
+              { value: "all", label: "All Types" },
+              { value: "earthquake", label: "Earthquake" },
+              { value: "wildfire", label: "Wildfire" },
+              { value: "flood", label: "Flood" },
+              { value: "hurricane", label: "Hurricane" },
+              { value: "other", label: "Other" }
+            ]}
+          />
 
           {/* State Filter */}
-          <select
+          <DropdownMenu
             value={stateFilter}
-            onChange={(e) => setStateFilter(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm bg-gray-800 border-gray-700 text-gray-200 focus:border-blue-500 focus:outline-none"
-          >
-            <option value="all">All States</option>
-            {uniqueStates.map((state) => (
-              <option key={state} value={state}>
-                {state}
-              </option>
-            ))}
-          </select>
+            onChange={setStateFilter}
+            placeholder="All States"
+            options={[
+              { value: "all", label: "All States" },
+              ...uniqueStates.map((state) => ({
+                value: state,
+                label: state
+              }))
+            ]}
+          />
 
           {/* Status Filter */}
-          <select
+          <DropdownMenu
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm bg-gray-800 border-gray-700 text-gray-200 focus:border-blue-500 focus:outline-none"
-          >
-            <option value="all">All Status</option>
-            <option value="new">New</option>
-            <option value="triaged">Triaged</option>
-            <option value="dismissed">Dismissed</option>
-          </select>
+            onChange={setStatusFilter}
+            placeholder="All Status"
+            options={[
+              { value: "all", label: "All Status" },
+              { value: "new", label: "New" },
+              { value: "triaged", label: "Triaged" },
+              { value: "dismissed", label: "Dismissed" }
+            ]}
+          />
         </div>
 
         <div className="mt-3 flex items-center justify-between text-sm">
@@ -188,8 +194,6 @@ export default function AlertsPage() {
 }
 
 function TweetRow({ tweet }: { tweet: MockTweet }) {
-  const [showMenu, setShowMenu] = useState(false);
-
   return (
     <Card className="bg-gray-900/50 border-gray-800/40 hover:bg-gray-900/70 transition-colors">
       <div className="p-4">
@@ -227,39 +231,26 @@ function TweetRow({ tweet }: { tweet: MockTweet }) {
                 </span>
 
                 {/* Action Menu */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowMenu(!showMenu)}
-                    className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-800 rounded transition-colors"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-
-                  {showMenu && (
-                    <div className="absolute right-0 mt-1 w-40 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10">
-                      <button
-                        onClick={() => {
-                          console.log('Mark as triaged:', tweet.id);
-                          setShowMenu(false);
-                        }}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 rounded-t-lg flex items-center gap-2"
-                      >
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        Mark Triaged
-                      </button>
-                      <button
-                        onClick={() => {
-                          console.log('Dismiss:', tweet.id);
-                          setShowMenu(false);
-                        }}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 rounded-b-lg flex items-center gap-2"
-                      >
-                        <XCircle className="w-3.5 h-3.5" />
-                        Dismiss
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <CustomDropdownMenu
+                  align="right"
+                  trigger={
+                    <button className="p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-800 rounded transition-colors">
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+                  }
+                  items={[
+                    {
+                      icon: <CheckCircle className="w-3.5 h-3.5" />,
+                      label: "Mark Triaged",
+                      onClick: () => console.log('Mark as triaged:', tweet.id)
+                    },
+                    {
+                      icon: <XCircle className="w-3.5 h-3.5" />,
+                      label: "Dismiss",
+                      onClick: () => console.log('Dismiss:', tweet.id)
+                    }
+                  ]}
+                />
               </div>
             </div>
 

@@ -4,14 +4,21 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MOCK_NOTIFICATION_HISTORY } from '@/lib/mock';
+import { useNotificationHistory } from '@/lib/services/data-service';
 import { formatDistanceToNow } from 'date-fns';
 import { Mail, Webhook, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { DropdownMenu } from '@/components/ui/dropdown-menu';
 
 export default function NotificationsPage() {
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [webhookEnabled, setWebhookEnabled] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState('https://api.example.com/webhooks/disasters');
+  const [severityFilter, setSeverityFilter] = useState('all');
+  const [disasterTypeFilter, setDisasterTypeFilter] = useState('all');
+  const [frequency, setFrequency] = useState('realtime');
+
+  // Centralized data fetching - replace with API call later
+  const { data: MOCK_NOTIFICATION_HISTORY, loading } = useNotificationHistory();
 
   return (
     <motion.div
@@ -212,12 +219,19 @@ export default function NotificationsPage() {
               <p className="text-xs text-gray-400 mb-3">
                 Only notify for specific severity levels
               </p>
-              <select
-                disabled
-                className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-sm text-gray-400"
-              >
-                <option>All Severities</option>
-              </select>
+              <div className="opacity-50 pointer-events-none">
+                <DropdownMenu
+                  value={severityFilter}
+                  onChange={setSeverityFilter}
+                  options={[
+                    { value: "all", label: "All Severities" },
+                    { value: "critical", label: "Critical" },
+                    { value: "high", label: "High" },
+                    { value: "medium", label: "Medium" },
+                    { value: "low", label: "Low" }
+                  ]}
+                />
+              </div>
             </div>
 
             <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
@@ -225,12 +239,20 @@ export default function NotificationsPage() {
               <p className="text-xs text-gray-400 mb-3">
                 Filter notifications by disaster type
               </p>
-              <select
-                disabled
-                className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-sm text-gray-400"
-              >
-                <option>All Types</option>
-              </select>
+              <div className="opacity-50 pointer-events-none">
+                <DropdownMenu
+                  value={disasterTypeFilter}
+                  onChange={setDisasterTypeFilter}
+                  options={[
+                    { value: "all", label: "All Types" },
+                    { value: "earthquake", label: "Earthquake" },
+                    { value: "wildfire", label: "Wildfire" },
+                    { value: "flood", label: "Flood" },
+                    { value: "hurricane", label: "Hurricane" },
+                    { value: "other", label: "Other" }
+                  ]}
+                />
+              </div>
             </div>
 
             <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
@@ -238,12 +260,18 @@ export default function NotificationsPage() {
               <p className="text-xs text-gray-400 mb-3">
                 How often to send notification batches
               </p>
-              <select
-                disabled
-                className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-sm text-gray-400"
-              >
-                <option>Real-time</option>
-              </select>
+              <div className="opacity-50 pointer-events-none">
+                <DropdownMenu
+                  value={frequency}
+                  onChange={setFrequency}
+                  options={[
+                    { value: "realtime", label: "Real-time" },
+                    { value: "hourly", label: "Hourly Digest" },
+                    { value: "daily", label: "Daily Digest" },
+                    { value: "weekly", label: "Weekly Digest" }
+                  ]}
+                />
+              </div>
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-4 text-center">

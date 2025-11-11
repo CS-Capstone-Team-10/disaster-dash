@@ -4,7 +4,8 @@
 import React, { useMemo, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Marker, useMap } from "react-leaflet";
 import L, { DivIcon } from "leaflet";
-import { MOCK_TWEETS, type Tweet } from "@/lib/mock/tweets";
+import { useDisasterIncidents } from '@/lib/services/data-service';
+import type { Tweet } from "@/lib/mock/tweets";
 import { aggregateTweetsToCityCounts, tweetsForCity } from "@/lib/geo/aggregate";
 
 // Fit bounds helper
@@ -123,7 +124,8 @@ function TweetRow({ t }: { t: Tweet }) {
 }
 
 export default function LiveMapImpl() {
-  const tweets = MOCK_TWEETS; // single source for now
+  // Centralized data fetching - replace with API call later
+  const { data: tweets, loading } = useDisasterIncidents();
   const points = useMemo(() => aggregateTweetsToCityCounts(tweets), [tweets]);
 
   const [openCity, setOpenCity] = useState<{ city: string; state: string } | null>(null);

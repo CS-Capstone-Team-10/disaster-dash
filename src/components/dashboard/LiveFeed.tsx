@@ -1,7 +1,7 @@
 'use client';
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { ClassifiedTweet } from "@/types/incidents";
-import { MOCK_CLASSIFIED_TWEETS, subscribeToTweetStream, startMockTweetPump } from "@/lib/mock";
+import { useLiveTweetStream } from '@/lib/services/data-service';
 
 const colorByType: Record<string,string> = {
   earthquake: "bg-amber-500/20 text-amber-300 border-amber-500/30",
@@ -12,15 +12,12 @@ const colorByType: Record<string,string> = {
 };
 
 export default function LiveFeed() {
-  const [items, setItems] = useState<ClassifiedTweet[]>(MOCK_CLASSIFIED_TWEETS);
+  // Centralized data fetching - replace with API call/WebSocket later
+  const items = useLiveTweetStream();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setMounted(true);
-    startMockTweetPump();
-    return subscribeToTweetStream((t) => {
-      setItems((prev) => [t, ...prev].slice(0, 50));
-    });
   }, []);
 
   return (

@@ -45,11 +45,11 @@ export function KpiCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <p className="text-xs text-gray-400 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-gray-100">
+          <p className="text-2xl font-bold text-gray-100" suppressHydrationWarning>
             {typeof value === "number" ? format(value) : value}
           </p>
           {delta !== undefined && (
-            <div className={`flex items-center gap-1 text-xs mt-1 ${deltaColor}`}>
+            <div className={`flex items-center gap-1 text-xs mt-1 ${deltaColor}`} suppressHydrationWarning>
               {deltaIcon}
               <span>{Math.abs(delta).toFixed(1)}%</span>
             </div>
