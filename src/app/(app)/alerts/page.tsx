@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { useDisasterIncidents } from '@/lib/services/data-service';
-import type { MockTweet } from '@/lib/mock';
+import type { BskyPost } from '@/types/post';
 import { formatDistanceToNow } from 'date-fns';
 import { Search, MoreVertical, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { DropdownMenu, CustomDropdownMenu } from '@/components/ui/dropdown-menu';
@@ -39,42 +39,42 @@ export default function AlertsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Centralized data fetching - replace with API call later
-  const { data: MOCK_TWEETS } = useDisasterIncidents();
+  const { data: BskyPosts } = useDisasterIncidents();
 
   const filteredTweets = useMemo(() => {
-    return MOCK_TWEETS.filter((tweet) => {
+    return BskyPosts.filter((post) => {
       // Search filter
       if (
         searchQuery &&
-        !tweet.text.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !tweet.city?.toLowerCase().includes(searchQuery.toLowerCase())
+        !post.post_text.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !post.location?.toLowerCase().includes(searchQuery.toLowerCase())
       ) {
         return false;
       }
 
       // Disaster type filter
-      if (disasterFilter !== 'all' && tweet.type !== disasterFilter) {
+      if (disasterFilter !== 'all' && post.disaster_type?.toLowerCase() !== disasterFilter) {
         return false;
       }
 
       // State filter
-      if (stateFilter !== 'all' && tweet.state !== stateFilter) {
+      if (stateFilter !== 'all' && post.location?.toLowerCase() !== stateFilter) {
         return false;
       }
 
       // Status filter
-      if (statusFilter !== 'all' && tweet.status !== statusFilter) {
+      if (statusFilter !== 'all' && post.is_disaster) {
         return false;
       }
 
       return true;
     });
-  }, [MOCK_TWEETS, searchQuery, disasterFilter, stateFilter, statusFilter]);
+  }, [BskyPosts, searchQuery, disasterFilter, stateFilter, statusFilter]);
 
   // Get unique states for filter
   const uniqueStates = useMemo(() => {
-    return Array.from(new Set(MOCK_TWEETS.map((t) => t.state))).sort();
-  }, [MOCK_TWEETS]);
+    return Array.from(new Set(BskyPosts.map((t) => t.location))).sort();
+  }, [BskyPosts]);
 
   return (
     <motion.div
@@ -151,7 +151,7 @@ export default function AlertsPage() {
 
         <div className="mt-3 flex items-center justify-between text-sm">
           <span className="text-gray-400">
-            Showing {filteredTweets.length} of {MOCK_TWEETS.length} alerts
+            Showing {filteredTweets.length} of {BskyPosts.length} alerts
           </span>
           {(searchQuery || disasterFilter !== 'all' || stateFilter !== 'all' || statusFilter !== 'all') && (
             <button
@@ -177,14 +177,14 @@ export default function AlertsPage() {
             <p className="text-gray-400">No alerts match your filters</p>
           </Card>
         ) : (
-          filteredTweets.map((tweet, index) => (
+          filteredTweets.map((post, index) => (
             <motion.div
-              key={tweet.id}
+              key={post.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.02 }}
             >
-              <TweetRow tweet={tweet} />
+              <TweetRow post={post} />
             </motion.div>
           ))
         )}
@@ -193,39 +193,32 @@ export default function AlertsPage() {
   );
 }
 
-function TweetRow({ tweet }: { tweet: MockTweet }) {
+function TweetRow({ post }: { post: BskyPost }) {
   return (
     <Card className="bg-gray-900/50 border-gray-800/40 hover:bg-gray-900/70 transition-colors">
       <div className="p-4">
         <div className="flex items-start gap-4">
           {/* Icon */}
-          <div className="text-2xl mt-1">{DISASTER_ICONS[tweet.type]}</div>
+          <div className="text-2xl mt-1">{DISASTER_ICONS[post.disaster_type as keyof typeof DISASTER_ICONS]}</div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4 mb-2">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className={`text-xs ${DISASTER_COLORS[tweet.type]}`}>
-                  {tweet.type}
+                <Badge className={`text-xs ${DISASTER_COLORS[post.disaster_type as keyof typeof DISASTER_COLORS]}`}>
+                  {post.disaster_type}
                 </Badge>
                 <Badge
                   variant="outline"
                   className="text-xs text-gray-400 border-gray-600"
                 >
-                  {tweet.state}
-                  {tweet.city && ` • ${tweet.city}`}
+                  {post.location}
                 </Badge>
-                <Badge className={`text-xs ${STATUS_COLORS[tweet.status]}`}>
-                  {tweet.status}
-                </Badge>
-                <span className="text-xs text-gray-500">
-                  {Math.round(tweet.confidence * 100)}% confidence
-                </span>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500 whitespace-nowrap">
-                  {formatDistanceToNow(new Date(tweet.createdAt), {
+                  {formatDistanceToNow(new Date(post.post_created_at), {
                     addSuffix: true,
                   })}
                 </span>
@@ -242,23 +235,23 @@ function TweetRow({ tweet }: { tweet: MockTweet }) {
                     {
                       icon: <CheckCircle className="w-3.5 h-3.5" />,
                       label: "Mark Triaged",
-                      onClick: () => console.log('Mark as triaged:', tweet.id)
+                      onClick: () => console.log('Mark as triaged:', post.id)
                     },
                     {
                       icon: <XCircle className="w-3.5 h-3.5" />,
                       label: "Dismiss",
-                      onClick: () => console.log('Dismiss:', tweet.id)
+                      onClick: () => console.log('Dismiss:', post.id)
                     }
                   ]}
                 />
               </div>
             </div>
 
-            <p className="text-sm text-gray-300 mb-2">{tweet.text}</p>
+            <p className="text-sm text-gray-300 mb-2">{post.post_text}</p>
 
             <div className="flex items-center gap-3 text-xs text-gray-500">
-              <span>Source: {tweet.source}</span>
-              {tweet.handle && <span>@{tweet.handle.replace('@', '')}</span>}
+              <span>Source: {post.post_author}</span>
+              {post.post_author && <span>@{post.post_author.replace('@', '')}</span>}
             </div>
           </div>
         </div>

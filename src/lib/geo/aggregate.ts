@@ -1,16 +1,16 @@
 // src/lib/geo/aggregate.ts
+import { BskyPost } from "@/types/post";
 import { CITY_COORDS } from "./cities";
-import type { MockTweet } from "@/lib/mock";
 
 export type CityPoint = { city: string; state: string; lat: number; lon: number; count: number };
 
-export function aggregateTweetsToCityCounts(tweets: MockTweet[]): CityPoint[] {
+export function aggregatePostsToCityCounts(posts: BskyPost[]): CityPoint[] {
   const counts = new Map<string, { city: string; state: string; count: number }>();
 
-  for (const t of tweets) {
-    if (!t.city || !t.state) continue;
-    const key = `${t.city.trim().toLowerCase()},${t.state.trim().toLowerCase()}`;
-    const item = counts.get(key) ?? { city: t.city.trim(), state: t.state.trim(), count: 0 };
+  for (const p of posts) {
+    if (!p.location) continue;
+    const key = `${p.location.trim().toLowerCase()}`;
+    const item = counts.get(key) ?? { city: p.location.trim(), state: p.location.trim(), count: 0 };
     item.count += 1;
     counts.set(key, item);
   }
@@ -24,9 +24,9 @@ export function aggregateTweetsToCityCounts(tweets: MockTweet[]): CityPoint[] {
   return out.sort((a, b) => b.count - a.count);
 }
 
-export function tweetsForCity(tweets: MockTweet[], city: string, state: string): MockTweet[] {
+export function postsForCity(posts: BskyPost[], city: string, state: string): BskyPost[] {
   const key = `${city.trim().toLowerCase()},${state.trim().toLowerCase()}`;
-  return tweets.filter(
-    t => t.city && `${t.city.trim().toLowerCase()},${t.state.trim().toLowerCase()}` === key
+  return posts.filter(
+    p => p.location && `${p.location.trim().toLowerCase()}` === key
   );
 }

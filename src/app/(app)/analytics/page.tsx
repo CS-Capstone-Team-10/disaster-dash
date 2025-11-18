@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useDisasterIncidents } from "@/lib/services/data-service";
+import { useAnalyticsIncidents } from "@/lib/services/data-service";
 import {
   filterTweets,
   splitCurrentVsPrev,
@@ -29,7 +29,7 @@ export default function AnalyticsPage() {
   const [mounted, setMounted] = useState(false);
 
   // Centralized data fetching - replace with API call later
-  const { data: MOCK_TWEETS } = useDisasterIncidents();
+  const { data: MOCK_TWEETS } = useAnalyticsIncidents();
 
   // Prevent hydration mismatch by only calculating after client mount
   React.useEffect(() => {

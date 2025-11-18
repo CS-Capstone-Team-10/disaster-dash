@@ -199,7 +199,7 @@ disaster-dash/
 
 #### Centralized Data Service
 
-All data fetching is managed through `/src/lib/services/data-service.ts`:
+All data fetching is managed through `/src/lib/services/data-service.ts` and integrates with the **bluesky_api** backend:
 
 ```typescript
 // Example usage
@@ -209,15 +209,29 @@ import { useDashboardData, useDisasterIncidents } from '@/lib/services/data-serv
 const { incidents, stateAggregations, trends, metrics, loading, error } = useDashboardData();
 ```
 
+**Backend Configuration:**
+```env
+# .env.local
+NEXT_PUBLIC_API_URL=http://localhost:8000  # Backend API URL
+NEXT_PUBLIC_USE_MOCK=false                 # Use real data by default
+```
+
 **Available Hooks:**
 - `useDashboardData()` - All dashboard data in one call
-- `useDisasterIncidents()` - Fetch all tweet incidents
-- `useStateAggregations()` - State-level metrics
+- `useDisasterIncidents()` - Fetch incidents from backend `/disasters` endpoint
+- `useStateAggregations()` - State-level aggregations from disaster data
 - `useDisasterTrends()` - Time-series trend data
-- `useMetrics()` - Metrics snapshot
-- `useNotificationHistory()` - Notification logs
-- `useLiveTweetStream()` - Real-time tweet subscription
+- `useMetrics()` - Metrics from backend `/stats` endpoint
+- `useNotificationHistory()` - Notification logs (mock)
+- `useLiveTweetStream()` - Real-time incident stream (polling every 30s)
+- `useAnalyticsIncidents()` - Incidents formatted for analytics
 - `useFilteredIncidents()` - Client-side filtered incidents
+
+**Backend Endpoints:**
+- `GET /disasters?limit=1000` - Fetch disaster analyses
+- `GET /stats?time_range=24hours` - Get statistics
+
+For detailed backend integration documentation, see [BACKEND_INTEGRATION.md](./BACKEND_INTEGRATION.md) and [INTEGRATION_SUMMARY.md](./INTEGRATION_SUMMARY.md).
 
 ---
 
@@ -304,158 +318,125 @@ Route (app)                         Size  First Load JS
 
 ### Default: Mock Data Mode
 
-By default, the app runs with comprehensive mock data. No API required!
+✅ **The app is integrated with the bluesky_api backend by default!**
 
-### Switching to Real API
+### Backend Configuration
 
 #### 1. Set Environment Variables
 
 Create `.env.local`:
 
 ```bash
-# Set to 'false' to use real API
+# Backend API URL (bluesky_api)
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Use real backend data (default)
 NEXT_PUBLIC_USE_MOCK=false
-
-# Your API base URL
-NEXT_PUBLIC_API_URL=https://api.atlasalert.com
 ```
 
-#### 2. Update Data Service
+#### 2. Start the Backend
 
-Open `/src/lib/services/data-service.ts` and uncomment the API calls:
+The frontend expects the bluesky_api backend to be running:
 
-```typescript
-async function fetchDisasterIncidents(): Promise<MockTweet[]> {
-  if (USE_MOCK_DATA) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return MOCK_TWEETS;
-  }
-
-  // Uncomment this section
-  const response = await fetch(`${API_BASE_URL}/incidents`);
-  if (!response.ok) throw new Error('Failed to fetch incidents');
-  return response.json();
-}
+```bash
+cd /path/to/bluesky_api
+uvicorn main:app --reload
 ```
 
-### API Endpoints Required
+#### 3. Start the Frontend
 
-Your backend should implement these 6 endpoints:
+```bash
+npm run dev
+```
 
-#### 1. GET /incidents
-Fetch all disaster incidents/tweets
+The frontend will automatically:
+- Fetch disasters from `GET /disasters`
+- Fetch statistics from `GET /stats`
+- Transform data to frontend formats
+- Poll for updates every 30 seconds
+
+### Backend API Endpoints (bluesky_api)
+
+The frontend integrates with these bluesky_api endpoints:
+
+#### 1. GET /disasters
+Fetch all disaster analyses
+
+**Query Parameters:**
+- `limit` (optional): Maximum records (default: 100)
+- `skip` (optional): Skip records (default: 0)
+- `severity` (optional): Filter by severity (low, medium, high, critical)
+- `time_range` (optional): Filter by time (hour, 24hours, week)
 
 **Response:**
 ```json
 [
   {
-    "id": "string",
-    "createdAt": "ISO timestamp",
-    "state": "CA",
-    "city": "Los Angeles",
-    "type": "earthquake" | "wildfire" | "flood" | "hurricane" | "other",
-    "text": "string",
+    "id": 1,
+    "post_uri": "at://...",
+    "post_author": "@user.bsky.social",
+    "post_text": "Wildfire reported...",
+    "post_created_at": "2025-10-27T14:30:00",
+    "summary": "Wildfire in California",
+    "location": "California",
+    "severity": "high",
+    "disaster_type": "wildfire",
     "confidence": 0.92,
-    "source": "twitter" | "bluesky",
-    "status": "new" | "triaged" | "dismissed",
-    "handle": "@username"
+    "is_disaster": true,
+    "analyzed_at": "2025-10-27T14:35:00"
   }
 ]
 ```
 
 **Used By:** Dashboard, Analytics, Alerts, Live Map
 
-#### 2. GET /aggregations/states
-State-level disaster aggregations
-
-**Response:**
-```json
-[
-  {
-    "id": "US-CA",
-    "byType": {
-      "wildfire": 72,
-      "earthquake": 44,
-      "flood": 6
-    },
-    "total": 122
-  }
-]
-```
-
-**Used By:** Dashboard (US Heatmap)
-
-#### 3. GET /trends
-Disaster trend data for charts
+#### 2. GET /stats
+Get disaster statistics
 
 **Query Parameters:**
-- `range` (optional): "6m" | "1y" | "all"
-
-**Response:**
-```json
-[
-  {
-    "date": "Jan",
-    "wildfires": 12,
-    "floods": 8,
-    "hurricanes": 3,
-    "earthquakes": 5
-  }
-]
-```
-
-**Used By:** Dashboard (Trend Chart)
-
-#### 4. GET /metrics
-Current metrics snapshot
+- `time_range` (optional): Filter by time (hour, 24hours, week)
 
 **Response:**
 ```json
 {
-  "windowLabel": "Last 24h",
-  "totalIncidents": 300,
-  "avgMTTRHours": 4.2,
-  "openIncidents": 45,
-  "resolvedPct": 0.85,
-  "trendTotals": [22, 28, 30, 35, 38, 42, 48, 50, 55, 57, 60, 63],
-  "bySeverity": {
-    "critical": 15,
-    "high": 90,
-    "medium": 140,
-    "low": 55
+  "time_range": "last 24 hours",
+  "total_disasters": 150,
+  "by_severity": {
+    "low": 30,
+    "medium": 70,
+    "high": 40,
+    "critical": 10
   },
-  "byDisaster": {
-    "earthquake": 38,
-    "wildfire": 82,
-    "flood": 66,
-    "hurricane": 45,
-    "other": 69
-  }
+  "recent_count": 5,
+  "recent_disasters": [...]
 }
 ```
 
-**Used By:** Dashboard
+**Used By:** Dashboard (Metrics)
 
-#### 5. GET /notifications/history
-Notification delivery history
+### Data Transformation
 
-**Response:**
-```json
-[
-  {
-    "id": "notif-1",
-    "sentAt": "ISO timestamp",
-    "channel": "Email" | "Webhook",
-    "summary": "string",
-    "status": "Delivered" | "Failed"
-  }
-]
+The frontend automatically handles data transformation:
+- **State Aggregation:** Computed client-side from disaster data
+- **Trends:** Uses mock data (backend endpoint not yet available)
+- **Notifications:** Uses mock data (feature not yet in backend)
+
+### Testing Without Backend
+
+To test with mock data (without backend):
+
+```bash
+# .env.local
+NEXT_PUBLIC_USE_MOCK=true
 ```
 
-**Used By:** Notifications page
+The app will use mock data from `src/lib/mock/` for all features.
 
-#### 6. WebSocket /stream
-Real-time tweet updates
+### Detailed Documentation
+
+For comprehensive backend integration documentation:
+- [BACKEND_INTEGRATION.md](./BACKEND_INTEGRATION.md) - Integration guide
+- [INTEGRATION_SUMMARY.md](./INTEGRATION_SUMMARY.md) - Complete change summary
 
 **Message Format:**
 ```json
@@ -525,13 +506,12 @@ async function fetchDisasterIncidents(): Promise<MockTweet[]> {
 Create `.env.local` in the project root:
 
 ```bash
-# Data Source Configuration
-NEXT_PUBLIC_USE_MOCK=true              # Use mock data (default)
-NEXT_PUBLIC_API_URL=                   # Leave empty for mock mode
+# Backend API Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8000  # bluesky_api backend URL
+NEXT_PUBLIC_USE_MOCK=false                 # Use real backend data (default)
 
-# Optional: Add your own variables
-# NEXT_PUBLIC_API_KEY=your-api-key
-# NEXT_PUBLIC_WS_URL=wss://your-websocket-url
+# Optional: Use mock data for testing without backend
+# NEXT_PUBLIC_USE_MOCK=true
 ```
 
 ### Production (Vercel)
@@ -541,17 +521,20 @@ Set environment variables in Vercel Dashboard:
 1. Go to your project → Settings → Environment Variables
 2. Add:
    - `NEXT_PUBLIC_USE_MOCK=false`
-   - `NEXT_PUBLIC_API_URL=https://your-api.com`
+   - `NEXT_PUBLIC_API_URL=https://your-backend-api.com`
 3. Redeploy
 
 ### Environment Variable Reference
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `NEXT_PUBLIC_USE_MOCK` | Use mock data instead of real API | `true` | No |
-| `NEXT_PUBLIC_API_URL` | Your API base URL | `/api` | Only when `USE_MOCK=false` |
+| `NEXT_PUBLIC_USE_MOCK` | Use mock data instead of backend API | `false` | No |
+| `NEXT_PUBLIC_API_URL` | Backend API base URL (bluesky_api) | `http://localhost:8000` | Yes |
 
-**Note:** Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser.
+**Note:** 
+- Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser
+- The frontend is integrated with the bluesky_api backend by default
+- Set `NEXT_PUBLIC_USE_MOCK=true` only for development/testing without backend
 
 ---
 

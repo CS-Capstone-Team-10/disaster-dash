@@ -5,8 +5,8 @@ import React, { useMemo, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Marker, useMap } from "react-leaflet";
 import L, { DivIcon } from "leaflet";
 import { useDisasterIncidents } from '@/lib/services/data-service';
-import type { MockTweet } from "@/lib/mock";
-import { aggregateTweetsToCityCounts, tweetsForCity } from "@/lib/geo/aggregate";
+import { aggregatePostsToCityCounts, CityPoint, postsForCity } from "@/lib/geo/aggregate";
+import { BskyPost } from "@/types/post";
 
 // Fit bounds helper
 function UsaFitBounds({ points }: { points: { lat: number; lon: number }[] }) {
@@ -90,34 +90,35 @@ function CenterModal({
   );
 }
 
-function TweetRow({ t }: { t: MockTweet }) {
-  const badge = {
+function TweetRow({ p }: { p: BskyPost }) {
+  const badge: Record<string, string> = {
     earthquake: "bg-orange-500/20 text-orange-300 border border-orange-500/30",
     wildfire: "bg-red-500/20 text-red-300 border border-red-500/30",
     flood: "bg-blue-500/20 text-blue-300 border border-blue-500/30",
     hurricane: "bg-green-500/20 text-green-300 border border-green-500/30",
     other: "bg-purple-500/20 text-purple-300 border border-purple-500/30",
-  }[t.type];
+  };
+  const badgeClass = badge[p.disaster_type as keyof typeof badge] || badge.other;
 
   const rel = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
-  const mins = Math.round((Date.now() - new Date(t.createdAt).getTime()) / 60000);
+  const mins = Math.round((Date.now() - new Date(p.post_created_at).getTime()) / 60000);
   const relText = mins < 60 ? rel.format(-mins, "minute") : rel.format(-Math.round(mins / 60), "hour");
 
   return (
     <div className="flex gap-3 p-3 rounded-xl border border-white/10 bg-gray-800/50 hover:bg-gray-800/70 transition">
       <div className={`h-6 shrink-0 rounded-full px-2 text-xs font-semibold flex items-center ${badge}`}>
-        {t.type}
+        {p.disaster_type}
       </div>
       <div className="flex-1">
         <div className="text-sm text-gray-200">
-          <span className="font-medium">{t.city}, {t.state}</span>
+          <span className="font-medium">{p.location}</span>
           <span className="mx-2 text-gray-500">•</span>
           <span className="text-gray-400">{relText}</span>
         </div>
-        <div className="text-sm mt-1 text-gray-300">{t.text}</div>
+        <div className="text-sm mt-1 text-gray-300">{p.post_text}</div>
       </div>
       <div className="text-xs text-gray-400 self-start">
-        {(t.confidence * 100).toFixed(0)}%
+        {(p.confidence * 100).toFixed(0)}%
       </div>
     </div>
   );
@@ -125,16 +126,16 @@ function TweetRow({ t }: { t: MockTweet }) {
 
 export default function LiveMapImpl() {
   // Centralized data fetching - replace with API call later
-  const { data: tweets } = useDisasterIncidents();
-  const points = useMemo(() => aggregateTweetsToCityCounts(tweets), [tweets]);
+  const { data: posts } = useDisasterIncidents();
+  const points = useMemo(() => aggregatePostsToCityCounts(posts), [posts]);
 
   const [openCity, setOpenCity] = useState<{ city: string; state: string } | null>(null);
-  const cityTweets = useMemo(
-    () => (openCity ? tweetsForCity(tweets, openCity.city, openCity.state) : []),
-    [openCity, tweets]
+  const cityPosts = useMemo(
+    () => (openCity ? postsForCity(posts, openCity.city, openCity.state) : []),
+    [openCity, posts]
   );
 
-  const max = useMemo(() => Math.max(1, ...points.map(p => p.count)), [points]);
+  const max = useMemo(() => Math.max(1, ...points.map((p: CityPoint) => p.count)), [points]);
   const radius = (v: number) => Math.min(30, Math.max(6, (v / max) * 24 + 6));
 
   return (
@@ -182,12 +183,12 @@ export default function LiveMapImpl() {
       {openCity && (
         <CenterModal
           title={`${openCity.city}, ${openCity.state}`}
-          subtitle={`${cityTweets.length} detected incident${cityTweets.length === 1 ? "" : "s"} • Last 24h`}
+          subtitle={`${cityPosts.length} detected incident${cityPosts.length === 1 ? "" : "s"} • Last 24h`}
           onClose={() => setOpenCity(null)}
         >
           <div className="flex flex-col gap-3">
-            {cityTweets.map(t => <TweetRow key={t.id} t={t} />)}
-            {cityTweets.length === 0 && (
+            {cityPosts.map(p => <TweetRow key={p.id} p={p} />)}
+            {cityPosts.length === 0 && (
               <div className="text-sm text-gray-400">No tweets for this city.</div>
             )}
           </div>
