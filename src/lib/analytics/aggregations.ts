@@ -96,6 +96,7 @@ export function statusByType(tweets: MockTweet[]) {
   ) as Record<Disaster, { new: number; triaged: number; dismissed: number }>;
 
   for (const t of tweets) {
+    if (!by[t.type]) continue; // Skip tweets with unexpected types
     by[t.type][t.status] += 1;
   }
   return types.map(type => ({ type, ...by[type] }));
