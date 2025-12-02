@@ -5,7 +5,7 @@ import React, { useMemo, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Marker, useMap } from "react-leaflet";
 import L, { DivIcon } from "leaflet";
 import { useDisasterIncidents } from '@/lib/services/data-service';
-import { aggregatePostsToCityCounts, CityPoint, postsForCity } from "@/lib/geo/aggregate";
+import { aggregatePostsToCityCounts, CityPoint, postsForLocation } from "@/lib/geo/aggregate";
 import { BskyPost } from "@/types/post";
 
 // Fit bounds helper
@@ -125,14 +125,14 @@ function TweetRow({ p }: { p: BskyPost }) {
 }
 
 export default function LiveMapImpl() {
-  // Centralized data fetching - replace with API call later
+  // Centralized data fetching - uses real backend data with coordinates
   const { data: posts } = useDisasterIncidents();
   const points = useMemo(() => aggregatePostsToCityCounts(posts), [posts]);
 
-  const [openCity, setOpenCity] = useState<{ city: string; state: string } | null>(null);
-  const cityPosts = useMemo(
-    () => (openCity ? postsForCity(posts, openCity.city, openCity.state) : []),
-    [openCity, posts]
+  const [openLocation, setOpenLocation] = useState<string | null>(null);
+  const locationPosts = useMemo(
+    () => (openLocation ? postsForLocation(posts, openLocation) : []),
+    [openLocation, posts]
   );
 
   const max = useMemo(() => Math.max(1, ...points.map((p: CityPoint) => p.count)), [points]);
@@ -154,7 +154,7 @@ export default function LiveMapImpl() {
         <UsaFitBounds points={points} />
 
         {points.map((p) => (
-          <React.Fragment key={`${p.city}-${p.state}`}>
+          <React.Fragment key={p.location}>
             {/* Glowing circle for density */}
             <CircleMarker
               center={[p.lat, p.lon]}
@@ -166,7 +166,7 @@ export default function LiveMapImpl() {
                 fillOpacity: 0.45,
               }}
               eventHandlers={{
-                click: () => setOpenCity({ city: p.city, state: p.state }),
+                click: () => setOpenLocation(p.location),
               }}
             />
 
@@ -174,22 +174,22 @@ export default function LiveMapImpl() {
             <Marker
               position={[p.lat, p.lon]}
               icon={makeCountIcon(p.count)}
-              eventHandlers={{ click: () => setOpenCity({ city: p.city, state: p.state }) }}
+              eventHandlers={{ click: () => setOpenLocation(p.location) }}
             />
           </React.Fragment>
         ))}
       </MapContainer>
 
-      {openCity && (
+      {openLocation && (
         <CenterModal
-          title={`${openCity.city}, ${openCity.state}`}
-          subtitle={`${cityPosts.length} detected incident${cityPosts.length === 1 ? "" : "s"} • Last 24h`}
-          onClose={() => setOpenCity(null)}
+          title={openLocation}
+          subtitle={`${locationPosts.length} detected incident${locationPosts.length === 1 ? "" : "s"} • Last 24h`}
+          onClose={() => setOpenLocation(null)}
         >
           <div className="flex flex-col gap-3">
-            {cityPosts.map(p => <TweetRow key={p.id} p={p} />)}
-            {cityPosts.length === 0 && (
-              <div className="text-sm text-gray-400">No tweets for this city.</div>
+            {locationPosts.map(p => <TweetRow key={p.id} p={p} />)}
+            {locationPosts.length === 0 && (
+              <div className="text-sm text-gray-400">No incidents for this location.</div>
             )}
           </div>
         </CenterModal>

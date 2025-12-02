@@ -96,7 +96,18 @@ export function statusByType(tweets: MockTweet[]) {
   ) as Record<Disaster, { new: number; triaged: number; dismissed: number }>;
 
   for (const t of tweets) {
-    by[t.type][t.status] += 1;
+    // Skip tweets without type or status
+    if (!t.type || !t.status) continue;
+
+    // Ensure the type exists in our tracking object
+    const type = t.type as Disaster;
+    if (!by[type]) continue;
+
+    // Ensure the status is valid
+    const status = t.status as 'new' | 'triaged' | 'dismissed';
+    if (status !== 'new' && status !== 'triaged' && status !== 'dismissed') continue;
+
+    by[type][status] += 1;
   }
   return types.map(type => ({ type, ...by[type] }));
 }

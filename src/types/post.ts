@@ -10,5 +10,8 @@ export type BskyPost = {
     disaster_type: string;
     confidence: number;
     is_disaster: boolean;
+    latitude?: number | null;
+    longitude?: number | null;
+    location_confidence?: number | null;
     analyzed_at: string;
 };
