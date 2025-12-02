@@ -27,9 +27,13 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   return (
     <motion.aside
       initial={{ x: 300, opacity: 0 }}
-      animate={{ x: isOpen ? 0 : 300, opacity: isOpen ? 1 : 0 }}
+      animate={{ 
+        x: isOpen ? 0 : -300, 
+        opacity: isOpen ? 1 : 0,
+        pointerEvents: isOpen ? 'auto' : 'none'
+      }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="fixed w-80 bg-gray-900 rounded-3xl shadow-2xl flex flex-col z-50"
+      className="fixed w-80 bg-gray-900 rounded-3xl shadow-2xl flex flex-col z-40"
       style={{
         height: 'calc(100vh - 2rem)',
         maxHeight: 'calc(100vh - 2rem)',
