@@ -42,6 +42,20 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Chatbot colors */
+  --color-atlas-dark: #0a0e1a;
+  --color-atlas-darker: #060911;
+  --color-atlas-card: #151b2e;
+  --color-atlas-border: #1f2937;
+  --color-atlas-blue: #3b82f6;
+  --color-atlas-blue-hover: #2563eb;
+  --color-atlas-text: #e5e7eb;
+  --color-atlas-text-muted: #9ca3af;
+  --color-atlas-success: #10b981;
+
+  /* Animation keyframes */
+  --animate-scale-in: scale-in 0.2s ease-out;
 }
 
 :root {
@@ -147,4 +161,20 @@
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: rgba(107, 114, 128, 0.8);
+}
+
+/* Chatbot animations */
+@keyframes scale-in {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
 }

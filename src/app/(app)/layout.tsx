@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { SettingsPanel } from '@/components/layout/SettingsPanel';
+import { ChatbotWidget } from '@/components/chatbot';
+import { useChatbot } from '@/lib/services/chatbot-service';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function AppLayout({
@@ -13,6 +15,9 @@ export default function AppLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Chatbot hook
+  const { messages, sendMessage, isTyping, quickReplies, onQuickReply } = useChatbot();
 
   const handleSettingsToggle = () => {
     setSettingsOpen(!settingsOpen);
@@ -50,6 +55,15 @@ export default function AppLayout({
       <SettingsPanel
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+      />
+
+      {/* Chatbot Widget */}
+      <ChatbotWidget
+        messages={messages}
+        onSendMessage={sendMessage}
+        isTyping={isTyping}
+        quickReplies={quickReplies}
+        onQuickReply={onQuickReply}
       />
 
       {/* Main content */}
