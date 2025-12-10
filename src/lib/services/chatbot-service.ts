@@ -54,32 +54,18 @@ const MOCK_RESPONSES: Record<string, string> = {
   'thank you': "Happy to help! Feel free to ask more questions anytime.",
 };
 
-// ============================================================================
-// CHATBOT LOGIC
-// ============================================================================
 
-/**
- * Generate a mock response based on user input
- */
 function generateMockResponse(userMessage: string): string {
   const lowerMessage = userMessage.toLowerCase();
 
-  // Check for exact matches or keyword presence
   for (const [keyword, response] of Object.entries(MOCK_RESPONSES)) {
     if (lowerMessage.includes(keyword)) {
       return response;
     }
   }
-
-  // Default response for unrecognized queries
   return "I'm still learning about that topic. You can explore the Dashboard, Live Map, or Analytics pages for more detailed information. Is there something specific about disasters or our data you'd like to know?";
 }
 
-/**
- * Call the chatbot API (for future integration)
- * @param message - User message to send
- * @returns Bot response
- */
 async function callChatbotAPI(message: string): Promise<string> {
   try {
     const response = await fetch(CHATBOT_API_URL, {
@@ -91,7 +77,6 @@ async function callChatbotAPI(message: string): Promise<string> {
         message,
         context: {
           timestamp: new Date().toISOString(),
-          // Add any context from current dashboard state if needed
         },
       }),
     });
@@ -108,9 +93,6 @@ async function callChatbotAPI(message: string): Promise<string> {
   }
 }
 
-/**
- * Process user message and get bot response
- */
 async function getBotResponse(userMessage: string): Promise<string> {
   if (USE_MOCK_CHATBOT) {
     // Simulate network delay
@@ -121,10 +103,6 @@ async function getBotResponse(userMessage: string): Promise<string> {
     return await callChatbotAPI(userMessage);
   }
 }
-
-// ============================================================================
-// REACT HOOK
-// ============================================================================
 
 export function useChatbot() {
   const [messages, setMessages] = useState<Message[]>([INITIAL_GREETING]);
@@ -185,9 +163,6 @@ export function useChatbot() {
   };
 }
 
-// ============================================================================
-// EXPORT API CLIENT (for custom integration)
-// ============================================================================
 
 export const chatbotService = {
   getBotResponse,
