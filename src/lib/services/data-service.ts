@@ -63,7 +63,7 @@ function bskyPostToMockTweet(post: BskyPost): MockTweet {
     state,
     city,
     type: post.disaster_type as Disaster,
-    text: post.post_text,
+    text: post.summary,
     confidence: post.confidence,
     source: 'bluesky',
     status: 'new', // Default status
@@ -139,6 +139,77 @@ async function fetchDisasterIncidents(): Promise<BskyPost[]> {
     return data;
   } catch (error) {
     console.error('Error fetching disasters:', error);
+    throw error;
+  }
+}
+
+/**
+ * Paginated response type
+ */
+export type PaginatedResponse<T> = {
+  data: T[];
+  total: number;
+  skip: number;
+  limit: number;
+  hasMore: boolean;
+};
+
+/**
+ * Fetch paginated disaster incidents from backend
+ */
+async function fetchPaginatedDisasterIncidents(
+  skip: number = 0,
+  limit: number = 20
+): Promise<PaginatedResponse<BskyPost>> {
+  try {
+    // Fetch one extra to determine if there are more
+    const response = await fetch(`${API_BASE_URL}/disasters?skip=${skip}&limit=${limit + 1}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch disasters: ${response.status} ${response.statusText}`);
+    }
+    
+    const data: BskyPost[] = await response.json();
+    const hasMore = data.length > limit;
+    const items = hasMore ? data.slice(0, limit) : data;
+    
+    // Fetch total count separately for accurate pagination
+    const totalResponse = await fetch(`${API_BASE_URL}/disasters?limit=0&skip=0`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    // Try to get total from a count endpoint or estimate
+    let total = skip + data.length;
+    if (hasMore) {
+      // If we got more than limit, there's at least one more page
+      // For accurate total, we'd need a count endpoint
+      // For now, fetch all to count (can be optimized with backend count endpoint)
+      const countResponse = await fetch(`${API_BASE_URL}/disasters?limit=10000`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (countResponse.ok) {
+        const allData = await countResponse.json();
+        total = allData.length;
+      }
+    }
+    
+    return {
+      data: items,
+      total,
+      skip,
+      limit,
+      hasMore,
+    };
+  } catch (error) {
+    console.error('Error fetching paginated disasters:', error);
     throw error;
   }
 }
@@ -294,6 +365,49 @@ export function useDisasterIncidents() {
   }, []);
 
   return { data, loading, error, refetch: () => fetchDisasterIncidents().then(setData) };
+}
+
+/**
+ * Hook to fetch paginated disaster incidents
+ * Use this in: Alerts page with pagination
+ */
+export function usePaginatedDisasterIncidents(page: number, pageSize: number = 20) {
+  const [data, setData] = useState<PaginatedResponse<BskyPost>>({
+    data: [],
+    total: 0,
+    skip: 0,
+    limit: pageSize,
+    hasMore: false,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const skip = (page - 1) * pageSize;
+
+  useEffect(() => {
+    setLoading(true);
+    fetchPaginatedDisasterIncidents(skip, pageSize)
+      .then(setData)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, [skip, pageSize]);
+
+  const refetch = () => {
+    setLoading(true);
+    fetchPaginatedDisasterIncidents(skip, pageSize)
+      .then(setData)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  };
+
+  return { 
+    data: data.data, 
+    total: data.total,
+    hasMore: data.hasMore,
+    loading, 
+    error, 
+    refetch 
+  };
 }
 
 /**
@@ -513,6 +627,7 @@ export function useFilteredIncidents(filters: {
 export const dataService = {
   // Core data fetching
   fetchIncidents: fetchDisasterIncidents,
+  fetchPaginatedIncidents: fetchPaginatedDisasterIncidents,
   fetchStateAggregations: fetchStateAggregations,
   fetchTrends: fetchDisasterTrends,
   fetchMetrics: fetchMetrics,

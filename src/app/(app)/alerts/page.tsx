@@ -4,10 +4,10 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { useDisasterIncidents } from '@/lib/services/data-service';
+import { usePaginatedDisasterIncidents } from '@/lib/services/data-service';
 import type { BskyPost } from '@/types/post';
 import { formatDistanceToNow } from 'date-fns';
-import { Search, MoreVertical, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Search, MoreVertical, CheckCircle, XCircle, AlertCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { DropdownMenu, CustomDropdownMenu } from '@/components/ui/dropdown-menu';
 
 const DISASTER_COLORS = {
@@ -32,21 +32,26 @@ const STATUS_COLORS = {
   dismissed: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
 };
 
+const PAGE_SIZE = 20;
+
 export default function AlertsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [disasterFilter, setDisasterFilter] = useState<string>('all');
   const [stateFilter, setStateFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Centralized data fetching - replace with API call later
-  const { data: BskyPosts } = useDisasterIncidents();
+  // Paginated data fetching
+  const { data: BskyPosts, total, loading, hasMore } = usePaginatedDisasterIncidents(currentPage, PAGE_SIZE);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const filteredTweets = useMemo(() => {
     return BskyPosts.filter((post) => {
       // Search filter
       if (
         searchQuery &&
-        !post.post_text.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !post.summary.toLowerCase().includes(searchQuery.toLowerCase()) &&
         !post.location?.toLowerCase().includes(searchQuery.toLowerCase())
       ) {
         return false;
@@ -71,10 +76,22 @@ export default function AlertsPage() {
     });
   }, [BskyPosts, searchQuery, disasterFilter, stateFilter, statusFilter]);
 
-  // Get unique states for filter
+  // Get unique states for filter (from current page data)
   const uniqueStates = useMemo(() => {
     return Array.from(new Set(BskyPosts.map((t) => t.location))).sort();
   }, [BskyPosts]);
+
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const goToFirstPage = () => goToPage(1);
+  const goToLastPage = () => goToPage(totalPages);
+  const goToPreviousPage = () => goToPage(currentPage - 1);
+  const goToNextPage = () => goToPage(currentPage + 1);
 
   return (
     <motion.div
@@ -151,7 +168,7 @@ export default function AlertsPage() {
 
         <div className="mt-3 flex items-center justify-between text-sm">
           <span className="text-gray-400">
-            Showing {filteredTweets.length} of {BskyPosts.length} alerts
+            Showing {filteredTweets.length} of {BskyPosts.length} on page {currentPage} ({total} total alerts)
           </span>
           {(searchQuery || disasterFilter !== 'all' || stateFilter !== 'all' || statusFilter !== 'all') && (
             <button
@@ -171,7 +188,12 @@ export default function AlertsPage() {
 
       {/* Alerts List */}
       <div className="space-y-3">
-        {filteredTweets.length === 0 ? (
+        {loading ? (
+          <Card className="bg-gray-900/50 border-gray-800/40 p-8 text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
+            <p className="text-gray-400">Loading alerts...</p>
+          </Card>
+        ) : filteredTweets.length === 0 ? (
           <Card className="bg-gray-900/50 border-gray-800/40 p-8 text-center">
             <AlertCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
             <p className="text-gray-400">No alerts match your filters</p>
@@ -189,8 +211,125 @@ export default function AlertsPage() {
           ))
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <Card className="bg-gray-900/50 border-gray-800/40 p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-400">
+              Page {currentPage} of {totalPages}
+            </div>
+            
+            <div className="flex items-center gap-1">
+              {/* First Page */}
+              <button
+                onClick={goToFirstPage}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="First page"
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </button>
+              
+              {/* Previous Page */}
+              <button
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1 mx-2">
+                {generatePageNumbers(currentPage, totalPages).map((pageNum, idx) => (
+                  pageNum === '...' ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-gray-500">...</span>
+                  ) : (
+                    <button
+                      key={pageNum}
+                      onClick={() => goToPage(pageNum as number)}
+                      className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                ))}
+              </div>
+              
+              {/* Next Page */}
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              
+              {/* Last Page */}
+              <button
+                onClick={goToLastPage}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Last page"
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="text-sm text-gray-400">
+              {total} total alerts
+            </div>
+          </div>
+        </Card>
+      )}
     </motion.div>
   );
+}
+
+// Helper function to generate page numbers with ellipsis
+function generatePageNumbers(currentPage: number, totalPages: number): (number | string)[] {
+  const pages: (number | string)[] = [];
+  const showEllipsis = totalPages > 7;
+  
+  if (!showEllipsis) {
+    // Show all pages if 7 or fewer
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Always show first page
+    pages.push(1);
+    
+    if (currentPage > 3) {
+      pages.push('...');
+    }
+    
+    // Show pages around current page
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    if (currentPage < totalPages - 2) {
+      pages.push('...');
+    }
+    
+    // Always show last page
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+  }
+  
+  return pages;
 }
 
 function TweetRow({ post }: { post: BskyPost }) {
@@ -247,7 +386,7 @@ function TweetRow({ post }: { post: BskyPost }) {
               </div>
             </div>
 
-            <p className="text-sm text-gray-300 mb-2">{post.post_text}</p>
+            <p className="text-sm text-gray-300 mb-2">{post.summary}</p>
 
             <div className="flex items-center gap-3 text-xs text-gray-500">
               <span>Source: {post.post_author}</span>

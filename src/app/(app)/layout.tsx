@@ -24,7 +24,7 @@ export default function AppLayout({
   };
 
   return (
-    <div className="flex w-full min-h-screen bg-gray-950">
+    <div className="flex w-full min-h-screen bg-white dark:bg-gray-950">
       {/* Blurred backdrop when sidebar or settings is open */}
       <AnimatePresence>
         {(sidebarOpen || settingsOpen) && (

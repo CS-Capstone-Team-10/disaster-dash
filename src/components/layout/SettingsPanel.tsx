@@ -33,7 +33,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         pointerEvents: isOpen ? 'auto' : 'none'
       }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="fixed w-80 bg-gray-900 rounded-3xl shadow-2xl flex flex-col z-40"
+      className="fixed w-80 bg-white dark:bg-gray-900 rounded-3xl shadow-2xl flex flex-col z-40"
       style={{
         height: 'calc(100vh - 2rem)',
         maxHeight: 'calc(100vh - 2rem)',
@@ -42,15 +42,15 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         right: 'auto'
       }}
     >
-      <div className="p-6 border-b border-gray-800">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-white">Settings</h2>
-            <p className="text-xs text-gray-400">Customize your experience</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Settings</h2>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Customize your experience</p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:bg-gray-800 rounded-xl transition-colors"
+            className="p-1.5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -61,7 +61,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         <div className="space-y-6">
           {/* Theme Settings Section */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">
+            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3 uppercase tracking-wider">
               Appearance
             </h3>
             <div className="space-y-2">
@@ -77,7 +77,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-2xl transition-all duration-200 ${
                       isActive
                         ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm ring-2 ring-blue-500/50'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-white bg-gray-800/30'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white bg-gray-200/30 dark:bg-gray-800/30'
                     }`}
                   >
                     <div className={`${isActive ? 'text-white' : 'text-gray-400'}`}>

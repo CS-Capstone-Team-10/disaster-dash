@@ -118,10 +118,10 @@
     @apply border-border outline-ring/50;
   }
   html {
-    @apply bg-gray-950;
+    @apply bg-white dark:bg-gray-950;
   }
   body {
-    @apply bg-gray-950 text-foreground;
+    @apply bg-white dark:bg-gray-950 text-foreground;
   }
 }
 

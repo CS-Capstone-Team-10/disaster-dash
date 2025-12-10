@@ -105,8 +105,8 @@ function TweetRow({ p }: { p: BskyPost }) {
   const relText = mins < 60 ? rel.format(-mins, "minute") : rel.format(-Math.round(mins / 60), "hour");
 
   return (
-    <div className="flex gap-3 p-3 rounded-xl border border-white/10 bg-gray-800/50 hover:bg-gray-800/70 transition">
-      <div className={`h-6 shrink-0 rounded-full px-2 text-xs font-semibold flex items-center ${badge}`}>
+    <div className="flex items-start gap-3 p-3 rounded-xl border border-white/10 bg-gray-800/50 hover:bg-gray-800/70 transition">
+      <div className={`h-6 shrink-0 rounded-full px-2 text-xs font-semibold flex items-center ${badgeClass}`}>
         {p.disaster_type}
       </div>
       <div className="flex-1">
@@ -115,9 +115,9 @@ function TweetRow({ p }: { p: BskyPost }) {
           <span className="mx-2 text-gray-500">•</span>
           <span className="text-gray-400">{relText}</span>
         </div>
-        <div className="text-sm mt-1 text-gray-300">{p.post_text}</div>
+        <div className="text-sm mt-1 text-gray-300">{p.summary}</div>
       </div>
-      <div className="text-xs text-gray-400 self-start">
+      <div className="text-xs text-gray-400">
         {(p.confidence * 100).toFixed(0)}%
       </div>
     </div>
