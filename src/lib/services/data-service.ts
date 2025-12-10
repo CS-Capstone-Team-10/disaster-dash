@@ -349,8 +349,17 @@ async function fetchNotificationHistory(): Promise<NotificationHistory[]> {
 // ============================================================================
 
 /**
+ * Sort posts by most recent first
+ */
+function sortByMostRecent(posts: BskyPost[]): BskyPost[] {
+  return [...posts].sort((a, b) => 
+    new Date(b.post_created_at).getTime() - new Date(a.post_created_at).getTime()
+  );
+}
+
+/**
  * Hook to fetch all disaster incidents
- * Use this in: Dashboard, Alerts page, Analytics page, Live Map
+ * Use this in: Dashboard, Alerts page, Analytics page
  */
 export function useDisasterIncidents() {
   const [data, setData] = useState<BskyPost[]>([]);
@@ -359,12 +368,50 @@ export function useDisasterIncidents() {
 
   useEffect(() => {
     fetchDisasterIncidents()
-      .then(setData)
+      .then((posts) => setData(sortByMostRecent(posts)))
       .catch(setError)
       .finally(() => setLoading(false));
   }, []);
 
-  return { data, loading, error, refetch: () => fetchDisasterIncidents().then(setData) };
+  return { data, loading, error, refetch: () => fetchDisasterIncidents().then((posts) => setData(sortByMostRecent(posts))) };
+}
+
+/**
+ * Hook to fetch disaster incidents from the last 24 hours only
+ * Use this in: Live Map
+ */
+export function useLiveMapIncidents() {
+  const [data, setData] = useState<BskyPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    fetchDisasterIncidents()
+      .then((allPosts) => {
+        const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+        const recentPosts = allPosts.filter((post) => {
+          const postTime = new Date(post.post_created_at).getTime();
+          return postTime >= twentyFourHoursAgo;
+        });
+        setData(sortByMostRecent(recentPosts));
+      })
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const refetch = () => {
+    fetchDisasterIncidents()
+      .then((allPosts) => {
+        const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+        const recentPosts = allPosts.filter((post) => {
+          const postTime = new Date(post.post_created_at).getTime();
+          return postTime >= twentyFourHoursAgo;
+        });
+        setData(sortByMostRecent(recentPosts));
+      });
+  };
+
+  return { data, loading, error, refetch };
 }
 
 /**
@@ -387,7 +434,13 @@ export function usePaginatedDisasterIncidents(page: number, pageSize: number = 2
   useEffect(() => {
     setLoading(true);
     fetchPaginatedDisasterIncidents(skip, pageSize)
-      .then(setData)
+      .then((response) => {
+        // Sort by most recent first
+        setData({
+          ...response,
+          data: sortByMostRecent(response.data),
+        });
+      })
       .catch(setError)
       .finally(() => setLoading(false));
   }, [skip, pageSize]);
@@ -395,7 +448,12 @@ export function usePaginatedDisasterIncidents(page: number, pageSize: number = 2
   const refetch = () => {
     setLoading(true);
     fetchPaginatedDisasterIncidents(skip, pageSize)
-      .then(setData)
+      .then((response) => {
+        setData({
+          ...response,
+          data: sortByMostRecent(response.data),
+        });
+      })
       .catch(setError)
       .finally(() => setLoading(false));
   };

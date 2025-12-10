@@ -18,14 +18,6 @@ const DISASTER_COLORS = {
   other: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
 };
 
-const DISASTER_ICONS = {
-  earthquake: '🌍',
-  wildfire: '🔥',
-  flood: '🌊',
-  hurricane: '🌀',
-  other: '⚠️',
-};
-
 const STATUS_COLORS = {
   new: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   triaged: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
@@ -47,7 +39,7 @@ export default function AlertsPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const filteredTweets = useMemo(() => {
-    return BskyPosts.filter((post) => {
+    const filtered = BskyPosts.filter((post) => {
       // Search filter
       if (
         searchQuery &&
@@ -74,6 +66,11 @@ export default function AlertsPage() {
 
       return true;
     });
+
+    // Sort by most recent first
+    return filtered.sort((a, b) => 
+      new Date(b.post_created_at).getTime() - new Date(a.post_created_at).getTime()
+    );
   }, [BskyPosts, searchQuery, disasterFilter, stateFilter, statusFilter]);
 
   // Get unique states for filter (from current page data)
@@ -185,33 +182,6 @@ export default function AlertsPage() {
           )}
         </div>
       </Card>
-
-      {/* Alerts List */}
-      <div className="space-y-3">
-        {loading ? (
-          <Card className="bg-gray-900/50 border-gray-800/40 p-8 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
-            <p className="text-gray-400">Loading alerts...</p>
-          </Card>
-        ) : filteredTweets.length === 0 ? (
-          <Card className="bg-gray-900/50 border-gray-800/40 p-8 text-center">
-            <AlertCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">No alerts match your filters</p>
-          </Card>
-        ) : (
-          filteredTweets.map((post, index) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.02 }}
-            >
-              <TweetRow post={post} />
-            </motion.div>
-          ))
-        )}
-      </div>
-
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <Card className="bg-gray-900/50 border-gray-800/40 p-4">
@@ -289,6 +259,31 @@ export default function AlertsPage() {
           </div>
         </Card>
       )}
+      {/* Alerts List */}
+      <div className="space-y-3">
+        {loading ? (
+          <Card className="bg-gray-900/50 border-gray-800/40 p-8 text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
+            <p className="text-gray-400">Loading alerts...</p>
+          </Card>
+        ) : filteredTweets.length === 0 ? (
+          <Card className="bg-gray-900/50 border-gray-800/40 p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400">No alerts match your filters</p>
+          </Card>
+        ) : (
+          filteredTweets.map((post, index) => (
+            <motion.div
+              key={post.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.02 }}
+            >
+              <TweetRow post={post} />
+            </motion.div>
+          ))
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -337,9 +332,6 @@ function TweetRow({ post }: { post: BskyPost }) {
     <Card className="bg-gray-900/50 border-gray-800/40 hover:bg-gray-900/70 transition-colors">
       <div className="p-4">
         <div className="flex items-start gap-4">
-          {/* Icon */}
-          <div className="text-2xl mt-1">{DISASTER_ICONS[post.disaster_type as keyof typeof DISASTER_ICONS]}</div>
-
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4 mb-2">

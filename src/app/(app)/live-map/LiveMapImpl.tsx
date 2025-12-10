@@ -4,7 +4,7 @@
 import React, { useMemo, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Marker, useMap } from "react-leaflet";
 import L, { DivIcon } from "leaflet";
-import { useDisasterIncidents } from '@/lib/services/data-service';
+import { useLiveMapIncidents } from '@/lib/services/data-service';
 import { aggregatePostsToCityCounts, CityPoint, postsForLocation } from "@/lib/geo/aggregate";
 import { BskyPost } from "@/types/post";
 
@@ -100,14 +100,27 @@ function TweetRow({ p }: { p: BskyPost }) {
   };
   const badgeClass = badge[p.disaster_type as keyof typeof badge] || badge.other;
 
+  const severityBadge: Record<string, string> = {
+    low: "bg-green-500/20 text-green-300 border border-green-500/30",
+    medium: "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30",
+    high: "bg-orange-500/20 text-orange-300 border border-orange-500/30",
+    critical: "bg-red-500/20 text-red-300 border border-red-500/30",
+  };
+  const severityClass = severityBadge[p.severity?.toLowerCase()] || severityBadge.medium;
+
   const rel = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
   const mins = Math.round((Date.now() - new Date(p.post_created_at).getTime()) / 60000);
   const relText = mins < 60 ? rel.format(-mins, "minute") : rel.format(-Math.round(mins / 60), "hour");
 
   return (
     <div className="flex items-start gap-3 p-3 rounded-xl border border-white/10 bg-gray-800/50 hover:bg-gray-800/70 transition">
-      <div className={`h-6 shrink-0 rounded-full px-2 text-xs font-semibold flex items-center ${badgeClass}`}>
-        {p.disaster_type}
+      <div className="flex flex-col gap-1.5 shrink-0">
+        <div className={`h-6 rounded-full px-2 text-xs font-semibold flex items-center ${badgeClass}`}>
+          {p.disaster_type}
+        </div>
+        <div className={`h-5 rounded-full px-2 text-[10px] font-medium flex items-center justify-center uppercase ${severityClass}`}>
+          {p.severity || "unknown"}
+        </div>
       </div>
       <div className="flex-1">
         <div className="text-sm text-gray-200">
@@ -125,13 +138,20 @@ function TweetRow({ p }: { p: BskyPost }) {
 }
 
 export default function LiveMapImpl() {
-  // Centralized data fetching - uses real backend data with coordinates
-  const { data: posts } = useDisasterIncidents();
+  // Centralized data fetching - uses real backend data with coordinates (last 24 hours only)
+  const { data: posts } = useLiveMapIncidents();
   const points = useMemo(() => aggregatePostsToCityCounts(posts), [posts]);
 
   const [openLocation, setOpenLocation] = useState<string | null>(null);
   const locationPosts = useMemo(
-    () => (openLocation ? postsForLocation(posts, openLocation) : []),
+    () => {
+      if (!openLocation) return [];
+      const posts_for_location = postsForLocation(posts, openLocation);
+      // Sort by most recent first
+      return posts_for_location.sort((a, b) => 
+        new Date(b.post_created_at).getTime() - new Date(a.post_created_at).getTime()
+      );
+    },
     [openLocation, posts]
   );
 
