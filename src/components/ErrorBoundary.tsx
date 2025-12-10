@@ -79,7 +79,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <p className="text-gray-400 text-sm">
-              We encountered an unexpected error. This has been logged and we'll look into it.
+              We encountered an unexpected error. This has been logged and we&apos;ll look into it.
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
@@ -149,7 +149,7 @@ export function SimpleErrorFallback({
         Component Error
       </h3>
       <p className="text-sm text-gray-400 text-center mb-4">
-        This section couldn't load properly.
+        This section couldn&apos;t load properly.
       </p>
       <button
         onClick={resetError}

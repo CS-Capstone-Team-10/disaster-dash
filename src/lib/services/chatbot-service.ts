@@ -8,7 +8,7 @@
  * const { messages, sendMessage, isTyping, quickReplies } = useChatbot();
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import type { Message } from '@/components/chatbot/types';
 
 // ============================================================================
