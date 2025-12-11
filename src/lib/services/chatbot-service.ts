@@ -16,7 +16,7 @@ import type { Message } from '@/components/chatbot/types';
 // ============================================================================
 
 const CHATBOT_API_URL = process.env.NEXT_PUBLIC_CHATBOT_API_URL || 'http://localhost:8000/chat';
-const USE_MOCK_CHATBOT = process.env.NEXT_PUBLIC_USE_MOCK_CHATBOT || 'True'; // Default to mock
+const USE_MOCK_CHATBOT = process.env.NEXT_PUBLIC_USE_MOCK_CHATBOT; // Default to mock
 
 // ============================================================================
 // MOCK DATA & RESPONSES
