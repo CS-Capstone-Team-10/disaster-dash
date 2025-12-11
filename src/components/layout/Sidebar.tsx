@@ -4,8 +4,9 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Map, AlertCircle, TrendingUp, Settings, Bell, X, User, LogIn, UserPlus } from 'lucide-react';
+import { LayoutDashboard, Map, AlertCircle, TrendingUp, Settings, Bell, X, User, LogIn, UserPlus, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose, onSettingsClick }: SidebarProps) {
   const pathname = usePathname();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
@@ -26,11 +28,20 @@ export function Sidebar({ isOpen, onClose, onSettingsClick }: SidebarProps) {
 
   const settingsItem = { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> };
 
-  const accountItems = [
-    { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" />, href: '/profile' },
-    { id: 'signin', label: 'Sign In', icon: <LogIn className="w-5 h-5" />, href: '/sign-in' },
-    { id: 'signup', label: 'Sign Up', icon: <UserPlus className="w-5 h-5" />, href: '/sign-up' },
-  ];
+  // Dynamic account items based on auth state
+  const accountItems = isAuthenticated
+    ? [
+        { id: 'profile', label: 'Profile', icon: <User className="w-5 h-5" />, href: '/profile' },
+      ]
+    : [
+        { id: 'signin', label: 'Sign In', icon: <LogIn className="w-5 h-5" />, href: '/sign-in' },
+        { id: 'signup', label: 'Sign Up', icon: <UserPlus className="w-5 h-5" />, href: '/sign-up' },
+      ];
+
+  const handleLogout = () => {
+    logout();
+    onClose();
+  };
 
   return (
       <motion.aside
@@ -114,6 +125,29 @@ export function Sidebar({ isOpen, onClose, onSettingsClick }: SidebarProps) {
             </h3>
           </div>
 
+          {/* Show user info when authenticated */}
+          {isAuthenticated && user && !isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-2xl"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    {user.full_name}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           <ul className="space-y-2">
             {accountItems.map((item, index) => {
               const isActive = pathname === item.href;
@@ -139,18 +173,25 @@ export function Sidebar({ isOpen, onClose, onSettingsClick }: SidebarProps) {
                 </motion.li>
               );
             })}
+
+            {/* Logout button when authenticated */}
+            {isAuthenticated && (
+              <motion.li
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: (menuItems.length + accountItems.length) * 0.05 }}
+              >
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-200 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="font-medium">Sign Out</span>
+                </button>
+              </motion.li>
+            )}
           </ul>
         </nav>
-
-        <div className="p-4">
-          <div className="bg-gradient-to-br from-blue-600 to-blue-500 dark:from-blue-900 dark:to-blue-800 rounded-2xl p-4 shadow-sm">
-            <p className="text-sm font-semibold text-white mb-1">Need Help?</p>
-            <p className="text-xs text-blue-100 dark:text-gray-300 mb-3">Check our documentation</p>
-            <button className="w-full bg-gradient-to-r from-blue-700 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white text-sm font-medium py-2.5 rounded-xl hover:from-blue-800 hover:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800 transition-all shadow-md hover:shadow-lg">
-              View Docs
-            </button>
-          </div>
-        </div>
       </motion.aside>
   );
 }

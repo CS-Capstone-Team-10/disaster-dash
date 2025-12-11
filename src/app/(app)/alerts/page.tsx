@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { usePaginatedDisasterIncidents } from '@/lib/services/data-service';
+import { useDisasterIncidents } from '@/lib/services/data-service';
 import type { BskyPost } from '@/types/post';
 import { formatDistanceToNow } from 'date-fns';
 import { Search, MoreVertical, CheckCircle, XCircle, AlertCircle, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
@@ -16,14 +16,6 @@ const DISASTER_COLORS = {
   flood: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   hurricane: 'bg-green-500/10 text-green-400 border-green-500/20',
   other: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-};
-
-const DISASTER_ICONS = {
-  earthquake: '🌍',
-  wildfire: '🔥',
-  flood: '🌊',
-  hurricane: '🌀',
-  other: '⚠️',
 };
 
 const STATUS_COLORS = {
@@ -41,13 +33,12 @@ export default function AlertsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Paginated data fetching
-  const { data: BskyPosts, total, loading, hasMore } = usePaginatedDisasterIncidents(currentPage, PAGE_SIZE);
+  // Fetch all data once
+  const { data: allBskyPosts, loading } = useDisasterIncidents();
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-
+  // Apply filters first, before pagination
   const filteredTweets = useMemo(() => {
-    return BskyPosts.filter((post) => {
+    return allBskyPosts.filter((post) => {
       // Search filter
       if (
         searchQuery &&
@@ -74,12 +65,28 @@ export default function AlertsPage() {
 
       return true;
     });
-  }, [BskyPosts, searchQuery, disasterFilter, stateFilter, statusFilter]);
+  }, [allBskyPosts, searchQuery, disasterFilter, stateFilter, statusFilter]);
 
-  // Get unique states for filter (from current page data)
+  // Calculate pagination values based on filtered results
+  const totalFiltered = filteredTweets.length;
+  const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
+
+  // Paginate the filtered results
+  const paginatedTweets = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    return filteredTweets.slice(startIndex, endIndex);
+  }, [filteredTweets, currentPage]);
+
+  // Get unique states for filter (from all data)
   const uniqueStates = useMemo(() => {
-    return Array.from(new Set(BskyPosts.map((t) => t.location))).sort();
-  }, [BskyPosts]);
+    return Array.from(new Set(allBskyPosts.map((t) => t.location))).sort();
+  }, [allBskyPosts]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, disasterFilter, stateFilter, statusFilter]);
 
   // Pagination handlers
   const goToPage = (page: number) => {
@@ -168,7 +175,7 @@ export default function AlertsPage() {
 
         <div className="mt-3 flex items-center justify-between text-sm">
           <span className="text-gray-400">
-            Showing {filteredTweets.length} of {BskyPosts.length} on page {currentPage} ({total} total alerts)
+            Showing {paginatedTweets.length} of {totalFiltered} filtered alerts ({allBskyPosts.length} total)
           </span>
           {(searchQuery || disasterFilter !== 'all' || stateFilter !== 'all' || statusFilter !== 'all') && (
             <button
@@ -185,33 +192,6 @@ export default function AlertsPage() {
           )}
         </div>
       </Card>
-
-      {/* Alerts List */}
-      <div className="space-y-3">
-        {loading ? (
-          <Card className="bg-gray-900/50 border-gray-800/40 p-8 text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
-            <p className="text-gray-400">Loading alerts...</p>
-          </Card>
-        ) : filteredTweets.length === 0 ? (
-          <Card className="bg-gray-900/50 border-gray-800/40 p-8 text-center">
-            <AlertCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">No alerts match your filters</p>
-          </Card>
-        ) : (
-          filteredTweets.map((post, index) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.02 }}
-            >
-              <TweetRow post={post} />
-            </motion.div>
-          ))
-        )}
-      </div>
-
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <Card className="bg-gray-900/50 border-gray-800/40 p-4">
@@ -284,11 +264,36 @@ export default function AlertsPage() {
             </div>
             
             <div className="text-sm text-gray-400">
-              {total} total alerts
+              {totalFiltered} filtered alerts
             </div>
           </div>
         </Card>
       )}
+      {/* Alerts List */}
+      <div className="space-y-3">
+        {loading ? (
+          <Card className="bg-gray-900/50 border-gray-800/40 p-8 text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3" />
+            <p className="text-gray-400">Loading alerts...</p>
+          </Card>
+        ) : paginatedTweets.length === 0 ? (
+          <Card className="bg-gray-900/50 border-gray-800/40 p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400">No alerts match your filters</p>
+          </Card>
+        ) : (
+          paginatedTweets.map((post, index) => (
+            <motion.div
+              key={post.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.02 }}
+            >
+              <TweetRow post={post} />
+            </motion.div>
+          ))
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -337,9 +342,6 @@ function TweetRow({ post }: { post: BskyPost }) {
     <Card className="bg-gray-900/50 border-gray-800/40 hover:bg-gray-900/70 transition-colors">
       <div className="p-4">
         <div className="flex items-start gap-4">
-          {/* Icon */}
-          <div className="text-2xl mt-1">{DISASTER_ICONS[post.disaster_type as keyof typeof DISASTER_ICONS]}</div>
-
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4 mb-2">
